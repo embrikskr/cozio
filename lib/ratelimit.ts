@@ -32,9 +32,35 @@ export function rateLimitReady(): boolean {
   return !!redis;
 }
 
+// How much to tighten the in-memory fallback. Each serverless instance keeps its
+// own counter, so with N warm instances the effective ceiling is N * limit — the
+// configured number is close to meaningless under real traffic. Dividing keeps
+// the exposure bounded while the app still works. This is damage control, not a
+// substitute for Upstash: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.
+const FALLBACK_DIVISOR = 4;
+
+function fallbackLimit(limit: number): number {
+  return Math.max(1, Math.ceil(limit / FALLBACK_DIVISOR));
+}
+
+let warned = false;
+function warnOnce(): void {
+  if (warned) return;
+  warned = true;
+  console.warn(
+    "[ratelimit] Upstash is not configured — falling back to a per-instance " +
+      "in-memory limiter. On serverless this does NOT bound request rates across " +
+      "instances. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.",
+  );
+}
+
 /**
  * Returns true if the request is allowed. Identify callers by a stable key
  * (e.g. `concierge:<ip>`). `limit` requests per `windowMs`.
+ *
+ * With Upstash configured this is a real distributed limit. Without it, the
+ * request still goes through a local check, but at a tightened threshold — see
+ * FALLBACK_DIVISOR.
  */
 export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
   if (redis) {
@@ -42,11 +68,13 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
       const { success } = await upstashLimiter(limit, windowMs).limit(key);
       return success;
     } catch {
-      // Redis hiccup → fail open to a local check rather than blocking traffic.
-      return memoryLimit(key, limit, windowMs);
+      // Redis hiccup → fall back to a local check rather than blocking traffic,
+      // at the tightened threshold since we no longer have a shared count.
+      return memoryLimit(key, fallbackLimit(limit), windowMs);
     }
   }
-  return memoryLimit(key, limit, windowMs);
+  warnOnce();
+  return memoryLimit(key, fallbackLimit(limit), windowMs);
 }
 
 // --- in-memory fallback ---------------------------------------------------
