@@ -142,9 +142,12 @@ export default function LandingPage() {
               Five-star stays, <em className="italic">without</em> the midnight texts.
             </h1>
 
+            {/* Kept to one line. The headline already sells the outcome, so this
+                only has to say what the thing is — the payoffs (fewer questions,
+                better reviews, upsells) each get their own section further down. */}
             <p className="mt-7 max-w-md text-lg leading-relaxed text-paper/75">
-              {APP_NAME} turns your check-in details, house manual and local tips into one guide
-              guests actually use — so questions stop, reviews climb, and extras sell themselves.
+              Check-in details, house manual and local tips in one link your guests
+              actually open.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-7">
