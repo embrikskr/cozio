@@ -532,17 +532,21 @@ function GuideScreen() {
         ))}
       </div>
 
-      {/* Host pick + upsell */}
+      {/* Host pick + Wi-Fi.
+          This slot used to show an "Early check-in €25 · Request" upsell card,
+          which advertised a feature the list below marks "Coming soon". The
+          Wi-Fi card replaces it — and it closes the loop with the texts at the
+          top of the page, where "What's the wifi password?" arrives at 11:42 PM. */}
       <div className="space-y-2.5 px-4 pt-3.5">
         <div className="rounded-2xl bg-clay-soft px-3.5 py-3 text-xs leading-snug text-night">
           ⭐ <span className="font-semibold">Host pick:</span> Brosundet Restaurant — 12 min away
         </div>
         <div className="flex items-center justify-between rounded-2xl border border-line bg-white px-3.5 py-3 shadow-sm">
           <span>
-            <span className="block text-[13px] font-semibold text-night">Early check-in</span>
-            <span className="block text-[11px] font-medium text-clay">€25 · per stay</span>
+            <span className="block text-[13px] font-semibold text-night">Wi-Fi</span>
+            <span className="block text-[11px] font-medium text-clay">brygga_guest</span>
           </span>
-          <span className="rounded-full bg-forest px-3.5 py-1.5 text-[11px] font-semibold text-paper">Request</span>
+          <span className="rounded-full bg-forest px-3.5 py-1.5 text-[11px] font-semibold text-paper">Copy</span>
         </div>
       </div>
 
