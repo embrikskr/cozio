@@ -3,46 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/guard";
-import { connectorById } from "@/lib/constants";
 
-export async function connectIntegration(
-  provider: string,
-  data: { apiKey?: string; accountId?: string; label?: string },
-) {
-  const userId = await requireUserId();
-  const connector = connectorById(provider);
-  if (!connector) return { ok: false, error: "Unknown integration" };
+// connectIntegration used to store the host's third-party API key and mark the
+// connector "connected" without ever contacting the provider. Nothing syncs, so
+// the credential had no purpose and the "connected" badge was untrue. Server
+// actions stay callable by anyone who knows the action id even after the UI is
+// removed, so the write path is closed here rather than only in the page.
+//
+// When a connector is genuinely implemented, restore this — and encrypt the
+// credential at rest before storing it (see the note in prisma/schema.prisma).
 
-  // API-key connectors must provide the required credentials.
-  if (connector.type === "apikey") {
-    const needsKey = connector.fields?.some((f) => f.key === "apiKey");
-    const needsAccount = connector.fields?.some((f) => f.key === "accountId");
-    if (needsKey && !data.apiKey?.trim()) return { ok: false, error: "Enter your API key" };
-    if (needsAccount && !data.accountId?.trim()) return { ok: false, error: "Enter your account ID" };
-  }
-
-  await prisma.integration.upsert({
-    where: { userId_provider: { userId, provider } },
-    create: {
-      userId,
-      provider,
-      status: "connected",
-      apiKey: data.apiKey?.trim() || null,
-      accountId: data.accountId?.trim() || null,
-      label: data.label?.trim() || null,
-    },
-    update: {
-      status: "connected",
-      apiKey: data.apiKey?.trim() || null,
-      accountId: data.accountId?.trim() || null,
-      label: data.label?.trim() || null,
-    },
-  });
-
-  revalidatePath("/dashboard/integrations");
-  return { ok: true };
+export async function connectIntegration(): Promise<{ ok: false; error: string }> {
+  await requireUserId();
+  return { ok: false, error: "Integrations aren't available yet." };
 }
 
+/**
+ * Still allowed: this only deletes rows. Hosts who connected something under the
+ * old UI need a way to get their stored credential out of our database.
+ */
 export async function disconnectIntegration(provider: string) {
   const userId = await requireUserId();
   await prisma.integration.deleteMany({ where: { userId, provider } });

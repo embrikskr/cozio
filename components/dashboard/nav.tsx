@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, CreditCard, LogOut, Menu, X, MessageSquare, Plug, ExternalLink } from "lucide-react";
+import { Home, CreditCard, LogOut, Menu, X, MessageSquare, ExternalLink } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn, initials } from "@/lib/utils";
 
@@ -19,7 +19,9 @@ const sections: { label: string; links: { href: string; label: string; icon: Rea
   {
     label: "Account",
     links: [
-      { href: "/dashboard/integrations", label: "Integrations", icon: Plug },
+      // Integrations is hidden until at least one connector actually syncs.
+      // The page still exists at /dashboard/integrations but only announces
+      // that they are coming — it no longer collects third-party credentials.
       { href: "/dashboard/billing", label: "Plan & billing", icon: CreditCard },
     ],
   },

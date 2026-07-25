@@ -34,22 +34,11 @@ const IMG = {
   cta: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=2000&q=80",
 };
 
-// Real brand logos via SimpleIcons CDN where available; styled wordmarks otherwise.
-const LOGO_TINT = "9b968a"; // muted warm grey, matches the editorial palette
-const integrations: { name: string; slug?: string }[] = [
-  { name: "Airbnb", slug: "airbnb" },
-  { name: "Booking.com", slug: "bookingdotcom" },
-  { name: "Vrbo" },
-  { name: "Guesty" },
-  { name: "Hostaway" },
-  { name: "Lodgify" },
-  { name: "Stripe", slug: "stripe" },
-  { name: "Spotify", slug: "spotify" },
-  { name: "Apple Music", slug: "applemusic" },
-  { name: "Google Calendar", slug: "googlecalendar" },
-  { name: "Calendly", slug: "calendly" },
-  { name: "Komoot", slug: "komoot" },
-];
+// The "Plays nicely with your stack" logo marquee used to live here. It showed
+// Airbnb, Booking.com, Guesty and friends, which implies integrations we do not
+// have — nothing in the codebase talks to any of them. Showing third-party marks
+// next to that claim is a promise we can't keep, so the band is gone until the
+// integrations are real.
 
 const guestTexts = [
   { text: "Hey!! What's the wifi password? 🙏", time: "11:42 PM" },
@@ -188,32 +177,6 @@ export default function LandingPage() {
             <div className="-mb-24">
               <GuidePhone scale={0.62} />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================ MARQUEE ============================ */}
-      <section className="border-b border-line py-9">
-        <p className="mb-6 text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-muted">
-          Plays nicely with your stack
-        </p>
-        <div className="marquee-mask overflow-hidden">
-          <div className="flex w-max animate-marquee items-center gap-14">
-            {[...integrations, ...integrations].map((b, i) =>
-              b.slug ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={i}
-                  src={`https://cdn.simpleicons.org/${b.slug}/${LOGO_TINT}`}
-                  alt={b.name}
-                  className="h-7 w-auto shrink-0 opacity-80"
-                />
-              ) : (
-                <span key={i} className="shrink-0 whitespace-nowrap font-display text-xl font-medium text-night/30">
-                  {b.name}
-                </span>
-              ),
-            )}
           </div>
         </div>
       </section>
