@@ -18,12 +18,14 @@ const sans = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
+  // Leads with the platform name people actually search for. "Digital guidebook"
+  // is what we call it; "Airbnb guest guide" is what a host types into Google.
   title: {
-    default: `${APP_NAME} — Digital guidebooks for short-term rentals`,
+    default: `${APP_NAME} — Guest guides for Airbnb & short-term rentals`,
     template: `%s · ${APP_NAME}`,
   },
   description:
-    "Create a beautiful digital guidebook for your rental. Share check-in details, house manuals and local tips with every guest — no app to download.",
+    "One link with everything your guests need — check-in, Wi-Fi, house rules and local tips. Built for Airbnb, Vrbo and Booking.com hosts. No app to download.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

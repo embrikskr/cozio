@@ -136,18 +136,23 @@ export default function LandingPage() {
 
         <div className="mx-auto grid max-w-6xl items-end gap-16 px-5 pb-0 pt-16 lg:grid-cols-[1.15fr_0.85fr] lg:pt-24">
           <div className="animate-fade-up pb-20 lg:pb-28">
-            <Kicker light>Digital guidebooks for modern hosts</Kicker>
+            {/* Names the audience, not a partnership. We say who this is for —
+                Airbnb and short-term rental hosts — which is plain description.
+                We do not claim to integrate with those platforms, because we
+                don't; that's why the logo marquee was removed. */}
+            <Kicker light>For Airbnb &amp; short-term rental hosts</Kicker>
 
+            {/* The headline has to say what the product IS. "Five-star stays,
+                without the midnight texts" sold the outcome beautifully but only
+                landed if you already knew what a digital guidebook was — a cold
+                visitor couldn't tell what they were looking at. The outcome line
+                still does its work, one step down. */}
             <h1 className="mt-7 font-display text-5xl font-semibold leading-[1.02] tracking-tight text-paper sm:text-6xl lg:text-[4.4rem]">
-              Five-star stays, <em className="italic">without</em> the midnight texts.
+              Your rental, <em className="italic">explained</em> in one link.
             </h1>
 
-            {/* Kept to one line. The headline already sells the outcome, so this
-                only has to say what the thing is — the payoffs (fewer questions,
-                better reviews, upsells) each get their own section further down. */}
             <p className="mt-7 max-w-md text-lg leading-relaxed text-paper/75">
-              Check-in details, house manual and local tips in one link your guests
-              actually open.
+              Check-in, Wi-Fi, house rules and local tips — so the midnight texts stop.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-7">
