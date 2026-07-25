@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Hostly design system                                                */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  /* Warm stone scale — shared by the whole app */
+  --color-ink-50: #faf7f1;
+  --color-ink-100: #f1ece1;
+  --color-ink-200: #e7e0d3;
+  --color-ink-300: #d3c9b8;
+  --color-ink-400: #a89d8a;
+  --color-ink-500: #6f6757;
+  --color-ink-600: #57503f;
+  --color-ink-700: #453f31;
+  --color-ink-800: #332e23;
+  --color-ink-900: #1b1813;
+  --color-ink-950: #121009;
+
+  /* Forest green brand scale */
+  --color-brand-50: #eef5f0;
+  --color-brand-100: #d8e9de;
+  --color-brand-200: #b2d3bf;
+  --color-brand-300: #84b89c;
+  --color-brand-400: #4f9674;
+  --color-brand-500: #2f7d5a;
+  --color-brand-600: #237a59;
+  --color-brand-700: #1a5740;
+  --color-brand-800: #14402f;
+  --color-brand-900: #0e2e22;
+
+  --color-amber-accent: #f59e0b;
+
+  /* Editorial palette for the marketing site — near-white, hairlines, one accent */
+  --color-paper: #fcfbf8;
+  --color-paper-2: #f4f1ea;
+  --color-night: #181611;
+  --color-forest: #14402f;
+  --color-forest-700: #1a5740;
+  --color-forest-600: #237a59;
+  --color-clay: #b85c38;
+  --color-clay-soft: #ecddd2;
+  --color-gold: #d9a441;
+  --color-line: #e4e0d5;
+  --color-muted: #6e6a60;
+
+  --font-sans: var(--font-sans-real), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-display), ui-serif, Georgia, "Times New Roman", serif;
+
+  --radius-card: 1rem;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-ink-900);
+}
+
+* {
+  border-color: var(--color-ink-200);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle dotted hero background */
+.bg-grid {
+  background-image: radial-gradient(circle, var(--color-ink-200) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Prose for rendered topic markdown */
+.prose-guide {
+  line-height: 1.7;
+  color: var(--color-ink-700);
+}
+.prose-guide h1,
+.prose-guide h2,
+.prose-guide h3 {
+  color: var(--color-ink-900);
+  font-weight: 600;
+  margin: 1.25em 0 0.5em;
+  line-height: 1.3;
+}
+.prose-guide h2 { font-size: 1.25rem; }
+.prose-guide h3 { font-size: 1.1rem; }
+.prose-guide p { margin: 0.75em 0; }
+.prose-guide ul,
+.prose-guide ol { margin: 0.75em 0; padding-left: 1.25em; }
+.prose-guide ul { list-style: disc; }
+.prose-guide ol { list-style: decimal; }
+.prose-guide li { margin: 0.25em 0; }
+.prose-guide a { color: var(--color-brand-700); text-decoration: underline; }
+.prose-guide strong { color: var(--color-ink-900); font-weight: 600; }
+.prose-guide code {
+  background: var(--color-ink-100);
+  padding: 0.1em 0.35em;
+  border-radius: 0.35rem;
+  font-size: 0.9em;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Logo marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* Premium soft surface for the guest guide — no hard border, layered shadow */
+.surface {
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(20, 18, 15, 0.04),
+    0 12px 28px -14px rgba(20, 18, 15, 0.16);
+}
+.surface-flat {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 18, 15, 0.05);
+}
+
+/* Warm paper grain for marketing backgrounds */
+.bg-paper-grain {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(circle at 1px 1px, rgba(27, 24, 19, 0.04) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Gentle float for hero cards */
+@keyframes float-slow {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float-slow 5s ease-in-out infinite alternate;
+}
+.animate-float-late {
+  animation: float-slow 6s ease-in-out 1.2s infinite alternate;
+}
+
+::selection {
+  background: var(--color-clay);
+  color: var(--color-paper);
+}

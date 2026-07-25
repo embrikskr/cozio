@@ -1,0 +1,369 @@
+// Hostly — digital guidebooks for short-term rentals.
+//
+// Local dev runs on SQLite for zero-setup. To go to production on
+// Supabase/Postgres, change `provider` to "postgresql" and set DATABASE_URL.
+// (No enums/arrays are used so the schema is portable across both.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // transaction pooler (6543) — app runtime
+  directUrl = env("DIRECT_URL") // session pooler (5432) — migrations
+}
+
+// ----------------------------------------------------------------------------
+// Accounts
+// ----------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  plan      String   @default("free") // legacy, unused (per-property billing now)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Billing (Stripe, per-property subscription)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  billingStatus        String    @default("trialing") // trialing | active | past_due | canceled
+  trialEndsAt          DateTime?
+
+  properties   Property[]
+  integrations Integration[]
+}
+
+// ----------------------------------------------------------------------------
+// Connected third-party integrations (PMS, channels, payments, embeds)
+// ----------------------------------------------------------------------------
+
+model Integration {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  String // matches a CONNECTORS id, e.g. "guesty"
+  status    String   @default("connected")
+  apiKey    String? // stored credential (encrypt at rest in production)
+  accountId String?
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+// ----------------------------------------------------------------------------
+// A Property = one rental = one digital guidebook
+// ----------------------------------------------------------------------------
+
+model Property {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  name        String
+  slug        String  @unique // public URL: /g/<slug>
+  type        String  @default("apartment") // apartment | house | cabin | hotel | other
+  published   Boolean @default(false)
+  language    String  @default("en")
+
+  // Location
+  address String?
+  city    String?
+  country String?
+  lat     Float?
+  lng     Float?
+
+  // Branding
+  coverImage   String?
+  logo         String?
+  primaryColor String  @default("#14402F")
+  accentColor  String  @default("#C0603B")
+  fontFamily   String  @default("sans") // sans | serif | rounded
+
+  // Feature toggles (per Touchstay's modular widgets)
+  conciergeEnabled Boolean @default(true)  // AI chatbot on the guest view
+  collectContact   Boolean @default(false) // ask for guest contact at entry
+  contactRequired  Boolean @default(false) // make the contact gate mandatory
+  reviewEnabled    Boolean @default(false) // 5-star review pop-up
+  reviewUrl        String? // where to send happy guests (Google etc.)
+  checkInEnabled   Boolean @default(false) // online check-in flow
+  plannerEnabled   Boolean @default(true)  // AI trip planner for guests
+  languages        String  @default("[]")  // JSON array of extra language codes
+
+  // Welcome
+  welcomeTitle   String?
+  welcomeMessage String?
+  hostName       String?
+  hostPhoto      String?
+  hostBio        String?
+
+  // Key info (rendered as quick cards in the guest view)
+  checkInTime    String?
+  checkOutTime   String?
+  checkInInfo    String? // how to get in / lockbox / keys
+  wifiName       String?
+  wifiPassword   String?
+  parkingInfo    String?
+  emergencyInfo  String?
+  contactPhone   String?
+  contactEmail   String?
+
+  // Guest access
+  accessPin String? // optional PIN to view the guidebook
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sections        Section[]
+  recommendations Recommendation[]
+  views           GuestView[]
+  leads           Lead[]
+  upsells         Upsell[]
+  orders          Order[]
+  reviews         Review[]
+  contacts        Contact[]
+  translations    Translation[]
+  messages        GuestMessage[]
+  checkIns        CheckIn[]
+
+  @@index([userId])
+}
+
+// ----------------------------------------------------------------------------
+// Guidebook content: Sections group Topics
+// ----------------------------------------------------------------------------
+
+model Section {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  title String
+  icon  String  @default("book-open")
+  order Int     @default(0)
+
+  topics Topic[]
+
+  @@index([propertyId])
+}
+
+model Topic {
+  id        String  @id @default(cuid())
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  title    String
+  body     String  @default("") // markdown
+  image    String?
+  videoUrl String? // YouTube/Vimeo embed
+  embedUrl String? // Spotify / Calendly / Matterport / Google Forms iframe
+  icon     String  @default("file-text")
+  order    Int     @default(0)
+
+  @@index([sectionId])
+}
+
+// ----------------------------------------------------------------------------
+// Local recommendations (restaurants, attractions, etc.)
+// ----------------------------------------------------------------------------
+
+model Recommendation {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  name        String
+  category    String  @default("restaurant") // restaurant | cafe | bar | attraction | shop | activity | beach | transport | other
+  description String  @default("")
+  address     String?
+  lat         Float?
+  lng         Float?
+  image       String?
+  url         String?
+  hostFavorite Boolean @default(false)
+  walkingTime String? // e.g. "5 min walk"
+  order       Int     @default(0)
+
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Analytics + guest leads
+// ----------------------------------------------------------------------------
+
+model GuestView {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  path       String   @default("/")
+  sessionId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String?
+  email      String?
+  message    String?
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Upsells (sell add-on services) + orders
+// ----------------------------------------------------------------------------
+
+model Upsell {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @default("")
+  price       Float    @default(0)
+  currency    String   @default("USD")
+  image       String?
+  unit        String? // e.g. "per group", "per night"
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+
+  orders Order[]
+
+  @@index([propertyId])
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  upsellId    String?
+  upsell      Upsell?  @relation(fields: [upsellId], references: [id], onDelete: SetNull)
+  upsellTitle String
+  price       Float    @default(0)
+  currency    String   @default("USD")
+  quantity    Int      @default(1)
+  guestName   String?
+  guestEmail  String?
+  note        String?
+  status      String   @default("new") // new | confirmed | fulfilled | cancelled
+  createdAt   DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Reviews (5-star pop-up: route happy guests out, capture private feedback)
+// ----------------------------------------------------------------------------
+
+model Review {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rating     Int      @default(5)
+  feedback   String?
+  guestName  String?
+  guestEmail String?
+  routedOut  Boolean  @default(false) // sent to Google/public platform
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Contact collection (CRM)
+// ----------------------------------------------------------------------------
+
+model Contact {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String?
+  email      String?
+  phone      String?
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Translations — JSON blob of translated strings per language
+// ----------------------------------------------------------------------------
+
+model Translation {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  language   String
+  data       String   @default("{}") // JSON: { fieldKey: translatedString }
+  updatedAt  DateTime @updatedAt
+
+  @@unique([propertyId, language])
+  @@index([propertyId])
+}
+
+// ----------------------------------------------------------------------------
+// Memo — guest messaging (email/SMS) with templates + scheduling
+// ----------------------------------------------------------------------------
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  channel   String   @default("email") // email | sms
+  subject   String?
+  body      String   @default("")
+  trigger   String   @default("manual") // manual | before_checkin | after_checkin | checkout
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ----------------------------------------------------------------------------
+// Online check-in submissions
+// ----------------------------------------------------------------------------
+
+model CheckIn {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  guestName   String
+  email       String?
+  phone       String?
+  arrivalDate String? // ISO date
+  arrivalTime String? // e.g. "16:30"
+  partySize   Int      @default(1)
+  agreedRules Boolean  @default(false)
+  notes       String?
+  status      String   @default("new") // new | acknowledged
+  createdAt   DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model GuestMessage {
+  id         String    @id @default(cuid())
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  channel    String    @default("email")
+  toName     String?
+  toAddress  String // email or phone
+  subject    String?
+  body       String    @default("")
+  status     String    @default("scheduled") // scheduled | sent | failed
+  sendAt     DateTime?
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([propertyId])
+}
