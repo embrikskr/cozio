@@ -49,15 +49,18 @@ const guestTexts = [
 const features = [
   ["AI guidebook generator", "Describe your place — or import your listing — and a full draft appears: sections, topics, local tips. You edit, it publishes."],
   ["AI concierge", "A chat tab that answers guests 24/7 using only your guidebook. It never invents an answer; it refers to you when unsure."],
-  // Not "coming soon" — this shipped. There is an Upsells tab in the editor,
-  // Upsell and Order models, an /api/orders endpoint and an email notification
-  // to the host. The pricing table already listed upsells as included, so the
-  // page was contradicting itself and underselling a feature that works.
-  ["Upsells & orders", "Sell early check-ins, transfers and welcome baskets. Guests request in a tap, you confirm from one inbox."],
-  ["Live map & local picks", "Pin your favourite spots. Guests get an interactive map, distances and directions."],
+  // Upsells and the map are built, but we are not selling them yet — they stay
+  // marked "Coming soon" until we choose to launch them. Under-promising is
+  // safe; the reverse is not.
+  ["Upsells & orders", "Coming soon — sell early check-ins, transfers and welcome baskets. Guests request in a tap, you confirm from one inbox."],
+  ["Live map & local picks", "Coming soon — pin your favourite spots. Guests get an interactive map, distances and directions."],
   ["Insights", "See views per tab and which topics guests actually open, so you sharpen what matters."],
   ["Multi-language", "Add languages per property. Guests switch with one tap inside the guide."],
-  ["Review funnel", "Happy guests get sent to your Google listing. Unhappy ones reach you privately — before the review goes public."],
+  // Was: "Happy guests get sent to your Google listing. Unhappy ones reach you
+  // privately — before the review goes public." That described review gating,
+  // which Google prohibits. The feature no longer filters by rating, so the
+  // copy no longer advertises that it does.
+  ["Review requests", "Ask guests for a review while the stay is fresh. Their written feedback comes to you, and they can post publicly in a tap."],
   ["Wi-Fi QR & weather", "Scan-to-connect Wi-Fi codes and a live local forecast, built into every guide."],
 ] as const;
 

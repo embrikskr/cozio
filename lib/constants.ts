@@ -319,11 +319,15 @@ export function avgPerProperty(n: number): number {
   return n > 0 ? monthlyTotal(n) / n : 0;
 }
 
+// Only list what a host gets today. The integrations line promised "Airbnb,
+// Guesty, Stripe & more" when no connector exists — it outlived the removal of
+// the integrations page and would have been the first thing a paying host went
+// looking for. Upsells and the interactive map are built but held back, so they
+// are not sold here either; they are marked "Coming soon" on the feature list.
 export const PRICING_INCLUDES = [
-  "Full guidebook & local recommendations map",
+  "Full guidebook & local recommendations",
   "AI concierge chat for guests (24/7)",
-  "Online check-in, upsells & guest messaging",
+  "Online check-in & guest messaging",
   "Custom branding, colours & fonts",
   "Multi-language, analytics & lead capture",
-  "Every integration — Airbnb, Guesty, Stripe & more",
 ];

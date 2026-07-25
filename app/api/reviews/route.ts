@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, clientIp } from "@/lib/ratelimit";
 
-// Guest submits a star rating. Happy guests (>=4) get routed to the public
-// review URL; lower ratings are kept as private feedback for the host.
+// Guest submits a star rating. Every guest is offered the public review link,
+// whatever they rated, and the written feedback always reaches the host.
+//
+// This used to send only 4- and 5-star guests to the review URL and keep the
+// rest private. That is review gating: Google has prohibited selectively
+// soliciting reviews from satisfied customers since 2018, and enforcement lands
+// on the host's listing, not on us. The private feedback channel is the part
+// hosts actually wanted, and it survives — it just no longer decides who is
+// allowed to review in public.
 export async function POST(req: Request) {
   if (!(await rateLimit(`reviews:${clientIp(req)}`, 10, 60_000))) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 });
@@ -18,7 +25,8 @@ export async function POST(req: Request) {
   });
   if (!property || !property.published) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const routedOut = r >= 4 && !!property.reviewUrl;
+  // No rating threshold — the link is offered to everyone or to no one.
+  const routedOut = !!property.reviewUrl;
   await prisma.review.create({
     data: {
       propertyId: property.id,
@@ -30,5 +38,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, routeTo: routedOut ? property.reviewUrl : null });
+  return NextResponse.json({ ok: true, routeTo: property.reviewUrl || null });
 }

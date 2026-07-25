@@ -9,6 +9,8 @@ export function ReviewPopup({ slug, brand, propertyName }: { slug: string; brand
   const [hover, setHover] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Public review link, offered after submitting regardless of the rating.
+  const [reviewUrl, setReviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -33,10 +35,10 @@ export function ReviewPopup({ slug, brand, propertyName }: { slug: string; brand
     const data = await res.json().catch(() => ({}));
     setLoading(false);
     try { localStorage.setItem(`cozio_reviewed_${slug}`, "1"); } catch {}
-    if (data.routeTo) {
-      window.location.href = data.routeTo;
-      return;
-    }
+    // Previously a high rating redirected straight to the host's review page.
+    // Now the link is shown to everyone as a choice — nobody is bounced out
+    // mid-sentence, and a guest who rated us badly is not hidden from it.
+    setReviewUrl(typeof data.routeTo === "string" ? data.routeTo : null);
     setSubmitted(true);
   }
 
@@ -50,7 +52,18 @@ export function ReviewPopup({ slug, brand, propertyName }: { slug: string; brand
         {submitted ? (
           <div className="py-3 text-center">
             <h3 className="font-semibold text-ink-900">Thank you! 💛</h3>
-            <p className="mt-1 text-sm text-ink-500">Your feedback helps us make your stay better.</p>
+            <p className="mt-1 text-sm text-ink-500">Your host has your feedback.</p>
+            {reviewUrl && (
+              <a
+                href={reviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex w-full items-center justify-center rounded-xl py-2.5 text-sm font-medium text-white"
+                style={{ background: brand }}
+              >
+                Share it publicly too
+              </a>
+            )}
           </div>
         ) : rating === 0 ? (
           <>
@@ -64,34 +77,58 @@ export function ReviewPopup({ slug, brand, propertyName }: { slug: string; brand
               ))}
             </div>
           </>
-        ) : rating >= 4 ? (
-          <div className="text-center">
-            <div className="mb-2 flex justify-center gap-1">
-              {Array.from({ length: rating }).map((_, i) => <Star key={i} className="size-6 fill-amber-400 text-amber-400" />)}
-            </div>
-            <h3 className="font-semibold text-ink-900">Wonderful! 🎉</h3>
-            <p className="mt-1 text-sm text-ink-500">Would you mind sharing it publicly?</p>
-            <button onClick={() => submit()} disabled={loading} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white" style={{ background: brand }}>
-              {loading && <Loader2 className="size-4 animate-spin" />} Leave a review
-            </button>
-          </div>
         ) : (
-          <PrivateFeedback brand={brand} loading={loading} onSubmit={submit} />
+          // One screen for every rating. The old version branched here: 4-5
+          // stars got "Would you mind sharing it publicly?", anything lower got
+          // the private form and never saw the review link. Same words, same
+          // options, whatever the guest thought of the stay.
+          <Feedback brand={brand} loading={loading} rating={rating} onSubmit={submit} />
         )}
       </div>
     </div>
   );
 }
 
-function PrivateFeedback({ brand, loading, onSubmit }: { brand: string; loading: boolean; onSubmit: (f: string) => void }) {
+function Feedback({
+  brand,
+  loading,
+  rating,
+  onSubmit,
+}: {
+  brand: string;
+  loading: boolean;
+  rating: number;
+  onSubmit: (f: string) => void;
+}) {
   const [text, setText] = useState("");
+  const happy = rating >= 4;
   return (
     <div>
-      <h3 className="font-semibold text-ink-900">Sorry to hear that.</h3>
-      <p className="mt-1 text-sm text-ink-500">Tell your host what could be better — this stays private.</p>
-      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="What happened?" className="mt-3 w-full rounded-xl border border-ink-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none" />
-      <button onClick={() => onSubmit(text)} disabled={loading} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white" style={{ background: brand }}>
-        {loading && <Loader2 className="size-4 animate-spin" />} Send privately
+      <div className="mb-2 flex justify-center gap-1">
+        {Array.from({ length: rating }).map((_, i) => (
+          <Star key={i} className="size-6 fill-amber-400 text-amber-400" />
+        ))}
+      </div>
+      <h3 className="font-semibold text-ink-900">{happy ? "Thank you! 🎉" : "Sorry to hear that."}</h3>
+      <p className="mt-1 text-sm text-ink-500">
+        {happy
+          ? "Anything you'd like your host to know?"
+          : "Tell your host what could be better — they'll see this directly."}
+      </p>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={3}
+        placeholder={happy ? "What made the stay?" : "What happened?"}
+        className="mt-3 w-full rounded-xl border border-ink-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+      />
+      <button
+        onClick={() => onSubmit(text)}
+        disabled={loading}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white"
+        style={{ background: brand }}
+      >
+        {loading && <Loader2 className="size-4 animate-spin" />} Send to host
       </button>
     </div>
   );
