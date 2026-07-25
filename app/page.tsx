@@ -49,7 +49,11 @@ const guestTexts = [
 const features = [
   ["AI guidebook generator", "Describe your place — or import your listing — and a full draft appears: sections, topics, local tips. You edit, it publishes."],
   ["AI concierge", "A chat tab that answers guests 24/7 using only your guidebook. It never invents an answer; it refers to you when unsure."],
-  ["Upsells & orders", "Coming soon — sell early check-ins, transfers and welcome baskets. Guests request in a tap, you confirm from one inbox."],
+  // Not "coming soon" — this shipped. There is an Upsells tab in the editor,
+  // Upsell and Order models, an /api/orders endpoint and an email notification
+  // to the host. The pricing table already listed upsells as included, so the
+  // page was contradicting itself and underselling a feature that works.
+  ["Upsells & orders", "Sell early check-ins, transfers and welcome baskets. Guests request in a tap, you confirm from one inbox."],
   ["Live map & local picks", "Pin your favourite spots. Guests get an interactive map, distances and directions."],
   ["Insights", "See views per tab and which topics guests actually open, so you sharpen what matters."],
   ["Multi-language", "Add languages per property. Guests switch with one tap inside the guide."],
@@ -260,9 +264,13 @@ export default function LandingPage() {
             <h2 className="mt-5 font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
               It answers.<br />You sleep.
             </h2>
+            {/* The old closing line — "Last night it would have handled six
+                questions before breakfast" — reads as a measured result. We have
+                no such measurement, so it was a number we made up. Replaced with
+                what we can actually stand behind. */}
             <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/65">
-              Trained on your guidebook only — so it answers like you would, and never makes
-              things up. Last night it would have handled six questions before breakfast.
+              Trained on your guidebook only — so it answers like you would, and never
+              makes things up. When it doesn&apos;t know, it says so and points guests to you.
             </p>
             <Link href="/g/brygga" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-paper underline decoration-paper/40 underline-offset-8 hover:decoration-paper">
               Try asking it something <ArrowRight className="size-4" />
@@ -312,20 +320,17 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night/90 via-night/40 to-night/10" />
         <div className="mx-auto max-w-6xl px-5 pb-16 pt-72">
           <Reveal>
+            {/* This section used to restate the hero almost word for word ("one
+                link with everything they need") and repeat its stat trio. The
+                photo earns its place as a breather, so the section stays — but
+                the copy now answers the objection nothing else on the page does:
+                what the guest has to do to open it. Nothing. */}
             <div className="max-w-2xl">
               <Kicker light>The guest experience</Kicker>
               <p className="mt-5 font-display text-3xl font-medium leading-snug text-paper sm:text-4xl">
-                Guests shouldn&apos;t have to text you to find the Wi-Fi. Give them one beautiful
-                link with everything they need — and let AI answer the rest.
+                No app to download. No account to make. Your guests tap the link and
+                it opens — on any phone, in their own language.
               </p>
-            </div>
-            <div className="mt-12 flex max-w-xl divide-x divide-paper/20 border-t border-paper/20 pt-7">
-              {[["One link", "all guest info"], ["24/7", "AI concierge"], ["In-app", "upsells & orders"]].map(([a, b], i) => (
-                <div key={b} className={i === 0 ? "pr-8" : "px-8"}>
-                  <div className="font-display text-3xl font-semibold text-paper">{a}</div>
-                  <div className="mt-1 text-xs text-paper/55">{b}</div>
-                </div>
-              ))}
             </div>
           </Reveal>
         </div>
