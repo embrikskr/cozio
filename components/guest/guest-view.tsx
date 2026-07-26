@@ -140,7 +140,6 @@ export function GuestView({ property }: { property: GuestProperty }) {
             allLangs={allLangs}
             lang={lang}
             setLang={setLang}
-            openDetail={setDetail}
             onCheckIn={property.checkInEnabled ? () => setShowCheckIn(true) : undefined}
           />
         )}
@@ -352,7 +351,6 @@ function HomeTab({
   allLangs,
   lang,
   setLang,
-  openDetail,
   onCheckIn,
 }: {
   property: GuestProperty;
@@ -365,7 +363,6 @@ function HomeTab({
   allLangs: string[];
   lang: string;
   setLang: (l: string) => void;
-  openDetail: (d: Detail) => void;
   onCheckIn?: () => void;
 }) {
   return (
@@ -467,36 +464,11 @@ function HomeTab({
           </section>
         )}
 
-        {/* Guide menu — a calm table of contents; topics open in a sheet */}
-        {property.sections.length > 0 && (
-          <section>
-            <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
-              The guide
-            </h2>
-            <div className="surface overflow-hidden rounded-2xl">
-              {property.sections.map((section, i) => (
-                <button
-                  key={section.id}
-                  onClick={() => openDetail({ kind: "section", section })}
-                  className={`flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-ink-50 ${
-                    i > 0 ? "border-t border-ink-100" : ""
-                  }`}
-                >
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full" style={{ background: `${brand}12`, color: brand }}>
-                    <Icon name={section.icon} className="size-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-semibold text-ink-900">{section.title}</span>
-                    <span className="block text-sm text-ink-400">
-                      {section.topics.length} {section.topics.length === 1 ? "topic" : "topics"}
-                    </span>
-                  </span>
-                  <ChevronRight className="size-4 shrink-0 text-ink-300" />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* The guide's table of contents used to sit here, which meant the
+            guidebook appeared in two places: a chapter list on Home and a
+            searchable version of the same content under Info. Home is now the
+            welcome — cover, check-in, a note from the host — and everything you
+            look things up in lives on the Info tab. */}
 
         <footer className="pb-2 pt-6 text-center text-xs text-ink-400">
           Powered by Cozio · Add this guide to your home screen for quick access
@@ -624,7 +596,10 @@ function InfoTab({
 
   return (
     <div>
-      <PageHeader title="Good to know" sub="Everything practical about your stay" />
+      {/* Was "Good to know / Everything practical about your stay" — accurate
+          when this tab held only the practical rows. It now carries the whole
+          guidebook too, so the header says so. */}
+      <PageHeader title="Your guide" sub="Everything about your stay, in one place" />
       <div className="px-5 pt-4">
         <div className="surface-flat flex items-center gap-2.5 rounded-full px-4 py-3">
           <Search className="size-4 shrink-0 text-ink-400" />
@@ -723,6 +698,39 @@ function InfoTab({
             );
           })}
         </div>
+
+        {/* The guidebook chapters, moved here from Home. Hidden while searching
+            — the matches above already answer the query, and a full chapter
+            list under them would just be noise. */}
+        {!q && property.sections.length > 0 && (
+          <section className="pt-7">
+            <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+              The guide
+            </h2>
+            <div className="surface overflow-hidden rounded-2xl">
+              {property.sections.map((section, i) => (
+                <button
+                  key={section.id}
+                  onClick={() => openDetail({ kind: "section", section })}
+                  className={`flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-ink-50 ${
+                    i > 0 ? "border-t border-ink-100" : ""
+                  }`}
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full" style={{ background: `${brand}12`, color: brand }}>
+                    <Icon name={section.icon} className="size-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-semibold text-ink-900">{section.title}</span>
+                    <span className="block text-sm text-ink-400">
+                      {section.topics.length} {section.topics.length === 1 ? "topic" : "topics"}
+                    </span>
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-ink-300" />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
