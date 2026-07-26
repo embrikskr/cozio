@@ -2,7 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/guard";
-import { stripe, stripeReady, STRIPE_PRICE_ID, APP_URL } from "@/lib/stripe";
+import {
+  stripe,
+  stripeReady,
+  STRIPE_PRICE_ID,
+  APP_URL,
+  TRIAL_PROPERTY_LIMIT,
+  propertyLimitReason,
+} from "@/lib/stripe";
+import { monthlyTotal } from "@/lib/constants";
 
 /** Per-property billing summary for the signed-in host. */
 export async function billingSummary() {
@@ -74,7 +82,17 @@ export async function openBillingPortal(): Promise<{ url?: string; error?: strin
 
 /**
  * Keep the subscription quantity in sync with the property count. Called after
- * a property is created or deleted. Best-effort — never throws into the caller.
+ * a property is created or deleted.
+ *
+ * Prorated, deliberately. This ran with `proration_behavior: "none"`, which
+ * meant a property added the day after an invoice was free until the next one —
+ * add five that day and you had five free properties for a month. With
+ * `create_prorations` the part-month is metered onto the next invoice, and
+ * removing a property produces a credit the same way. Nobody is charged at the
+ * moment they click; the adjustment simply lands where it belongs.
+ *
+ * Best-effort — never throws into the caller. A failure here under-bills rather
+ * than blocking a host mid-task, and the next create or delete reconciles it.
  */
 export async function syncBillingQuantity(userId: string): Promise<void> {
   if (!stripeReady() || !stripe) return;
@@ -88,11 +106,47 @@ export async function syncBillingQuantity(userId: string): Promise<void> {
     const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
     const item = sub.items.data[0];
     if (!item) return;
+
+    const quantity = Math.max(1, count);
+    if (item.quantity === quantity) return; // nothing to do, and no stray proration
+
     await stripe.subscriptions.update(sub.id, {
-      items: [{ id: item.id, quantity: Math.max(1, count) }],
-      proration_behavior: "none",
+      items: [{ id: item.id, quantity }],
+      proration_behavior: "create_prorations",
     });
-  } catch {
-    /* billing sync is best-effort; the webhook reconciles on the next event */
+  } catch (e) {
+    // Logged rather than swallowed: silent under-billing is the kind of bug
+    // that only shows up as missing revenue months later.
+    console.error("[billing] quantity sync failed for", userId, e);
   }
+}
+
+/**
+ * What the next property would cost, for the confirmation shown before it is
+ * created. Returns monthly totals in whole currency units, using the same bands
+ * the pricing page quotes.
+ */
+export async function propertyQuota(): Promise<{
+  count: number;
+  isPaying: boolean;
+  trialLimit: number;
+  currentMonthly: number;
+  nextMonthly: number;
+  blockedReason: string | null;
+}> {
+  const userId = await requireUserId();
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { billingStatus: true, trialEndsAt: true },
+  });
+  const count = await prisma.property.count({ where: { userId } });
+
+  return {
+    count,
+    isPaying: user.billingStatus === "active",
+    trialLimit: TRIAL_PROPERTY_LIMIT,
+    currentMonthly: monthlyTotal(count),
+    nextMonthly: monthlyTotal(count + 1),
+    blockedReason: stripeReady() ? propertyLimitReason(user, count) : null,
+  };
 }

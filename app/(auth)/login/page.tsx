@@ -51,7 +51,12 @@ function LoginForm() {
           <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
         </div>
         <div>
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link href="/forgot-password" className="text-xs text-ink-500 hover:text-ink-900 hover:underline">
+              Forgot?
+            </Link>
+          </div>
           <Input id="password" name="password" type="password" autoComplete="current-password" required placeholder="••••••••" />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>

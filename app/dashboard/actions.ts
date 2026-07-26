@@ -8,7 +8,7 @@ import { currentUserId } from "@/lib/auth";
 import { uniqueSlug } from "@/lib/utils";
 import { STARTER_SECTIONS } from "@/lib/constants";
 import { generateGuide } from "@/lib/ai";
-import { stripeReady, billingActive } from "@/lib/stripe";
+import { stripeReady, billingActive, propertyLimitReason } from "@/lib/stripe";
 import { syncBillingQuantity } from "@/app/dashboard/billing/actions";
 import {
   propertySchema,
@@ -44,9 +44,27 @@ async function assertOwnsSection(sectionId: string): Promise<void> {
 // Properties
 // ----------------------------------------------------------------------------
 
+
+/**
+ * Refuse a new property when the host's plan doesn't cover it. The trial covers
+ * one guidebook; paying hosts have no ceiling because each property is billed.
+ * Checked here rather than only in the UI — these are server actions, callable
+ * without the button.
+ */
+async function assertCanAddProperty(userId: string): Promise<void> {
+  if (!stripeReady()) return; // billing not configured (local dev) — don't block
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { billingStatus: true, trialEndsAt: true },
+  });
+  const count = await prisma.property.count({ where: { userId } });
+  const reason = propertyLimitReason(user, count);
+  if (reason) throw new Error(reason);
+}
+
 export async function createProperty(formData: FormData) {
   const userId = await requireUserId();
-  // Per-property billing: no hard cap — each published property is billed.
+  await assertCanAddProperty(userId);
   const name = String(formData.get("name") || "").trim();
   const type = String(formData.get("type") || "apartment");
   const language = String(formData.get("language") || "en");
@@ -404,6 +422,7 @@ export async function deleteRecommendation(recId: string) {
 
 export async function createPropertyFromAI(formData: FormData) {
   const userId = await requireUserId();
+  await assertCanAddProperty(userId);
   const name = String(formData.get("name") || "").trim();
   const type = String(formData.get("type") || "apartment");
   const language = String(formData.get("language") || "en");
