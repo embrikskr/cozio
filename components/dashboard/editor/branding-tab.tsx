@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import { updateProperty } from "@/app/dashboard/actions";
 import type { PropertyWithContent } from "@/lib/types";
 
@@ -63,10 +64,14 @@ export function BrandingTab({ property }: { property: PropertyWithContent }) {
               <Label>Host name(s)</Label>
               <Input value={form.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Ingrid & Lars" />
             </div>
-            <div>
-              <Label>Host photo URL</Label>
-              <Input value={form.hostPhoto} onChange={(e) => set("hostPhoto", e.target.value)} placeholder="https://…" />
-            </div>
+            <ImageUpload
+              label="Host photo"
+              value={form.hostPhoto}
+              onChange={(url) => set("hostPhoto", url)}
+              prefix="hosts"
+              aspect="aspect-square"
+              maxWidth="max-w-[160px]"
+            />
           </div>
           <div>
             <Label>Short bio</Label>
@@ -82,14 +87,21 @@ export function BrandingTab({ property }: { property: PropertyWithContent }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Cover image URL</Label>
-              <Input value={form.coverImage} onChange={(e) => set("coverImage", e.target.value)} placeholder="https://…" />
-            </div>
-            <div>
-              <Label>Logo URL (optional)</Label>
-              <Input value={form.logo} onChange={(e) => set("logo", e.target.value)} placeholder="https://…" />
-            </div>
+            <ImageUpload
+              label="Cover image"
+              value={form.coverImage}
+              onChange={(url) => set("coverImage", url)}
+              prefix="covers"
+              hint="The first thing guests see. Landscape works best."
+            />
+            <ImageUpload
+              label="Logo (optional)"
+              value={form.logo}
+              onChange={(url) => set("logo", url)}
+              prefix="logos"
+              aspect="aspect-square"
+              maxWidth="max-w-[160px]"
+            />
           </div>
           <div>
             <Label>Brand colour</Label>

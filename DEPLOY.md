@@ -106,6 +106,10 @@ bands from `lib/constants.ts` as a single graduated Stripe Price.
   real protection on the public `/api/concierge` and other endpoints.
 - **Email** — wire [Resend](https://resend.com) into `app/dashboard/messages/actions.ts` so
   Memo actually sends, and to notify hosts of new leads/orders.
-- **Image uploads** — currently URL fields; add Supabase Storage for direct uploads.
+- **Image uploads** — done, on Supabase Storage. Create a **public** bucket named
+  `guide-images` (Storage → New bucket) and set `NEXT_PUBLIC_SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY`. Until those exist the editor tells hosts uploads
+  aren't available rather than failing on submit. The bucket must be public
+  because guest guides are public pages — writes stay server-side, behind auth.
 - **Error monitoring** — add Sentry.
 - **Backups** — enable Supabase point-in-time recovery.

@@ -31,6 +31,7 @@ import {
   updateTopic,
   deleteTopic,
 } from "@/app/dashboard/actions";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import type { PropertyWithContent, SectionWithTopics, TopicRow } from "@/lib/types";
 
 export function ContentTab({ property }: { property: PropertyWithContent }) {
@@ -319,10 +320,7 @@ function TopicDialog({
             </div>
             <Textarea id="t-body" value={body} onChange={(e) => setBody(e.target.value)} rows={7} placeholder="Write the details guests need…" />
           </div>
-          <div>
-            <Label htmlFor="t-image">Image URL (optional)</Label>
-            <Input id="t-image" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" />
-          </div>
+          <ImageUpload label="Image (optional)" value={image} onChange={setImage} prefix="topics" />
           <div>
             <Label htmlFor="t-video">Video URL (YouTube / Vimeo)</Label>
             <Input id="t-video" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" />

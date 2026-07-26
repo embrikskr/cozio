@@ -21,6 +21,7 @@ import {
   deleteRecommendation,
 } from "@/app/dashboard/actions";
 import { AddressField } from "@/components/dashboard/address-field";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import { REC_CATEGORIES } from "@/lib/constants";
 import type { PropertyWithContent, RecommendationRow } from "@/lib/types";
 
@@ -190,8 +191,12 @@ function RecDialog({
               <Input value={form.url} onChange={(e) => set("url", e.target.value)} placeholder="https://…" />
             </div>
             <div className="col-span-2">
-              <Label>Image URL (optional)</Label>
-              <Input value={form.image} onChange={(e) => set("image", e.target.value)} placeholder="https://…" />
+              <ImageUpload
+                label="Image (optional)"
+                value={form.image}
+                onChange={(url) => set("image", url)}
+                prefix="places"
+              />
             </div>
           </div>
           <label className="flex items-center justify-between rounded-sm bg-ink-50 p-3">
