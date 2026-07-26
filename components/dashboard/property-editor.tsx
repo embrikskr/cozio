@@ -92,15 +92,21 @@ export function PropertyEditor({ property, views }: Props) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="content">
+      {/* Ordered by what a host has to fill in first. Branding and Settings
+          carry the things a guide cannot go live without — the welcome, the
+          host profile, check-in times, Wi-Fi, the address — so they lead, and
+          the editor opens on Branding rather than Content. Content and
+          Recommendations follow, then the tabs you only visit once the guide
+          is live: Share, Analytics, Inbox, Preview. */}
+      <Tabs defaultValue="branding">
         <div className="-mx-5 overflow-x-auto px-5 pb-1">
           <TabsList>
+            <TabsTrigger value="branding"><Palette className="size-4" /> Branding</TabsTrigger>
+            <TabsTrigger value="settings"><Settings className="size-4" /> Settings</TabsTrigger>
             <TabsTrigger value="content"><BookOpen className="size-4" /> Content</TabsTrigger>
             <TabsTrigger value="recs"><MapPin className="size-4" /> Recommendations</TabsTrigger>
             <TabsTrigger value="upsells"><Tag className="size-4" /> Upsells</TabsTrigger>
-            <TabsTrigger value="branding"><Palette className="size-4" /> Branding</TabsTrigger>
             <TabsTrigger value="languages"><Globe className="size-4" /> Languages</TabsTrigger>
-            <TabsTrigger value="settings"><Settings className="size-4" /> Settings</TabsTrigger>
             <TabsTrigger value="share"><Share2 className="size-4" /> Share</TabsTrigger>
             <TabsTrigger value="analytics"><BarChart3 className="size-4" /> Analytics</TabsTrigger>
             <TabsTrigger value="inbox"><Inbox className="size-4" /> Inbox</TabsTrigger>
@@ -108,12 +114,12 @@ export function PropertyEditor({ property, views }: Props) {
           </TabsList>
         </div>
 
+        <TabsContent value="branding"><BrandingTab property={property} /></TabsContent>
+        <TabsContent value="settings"><SettingsTab property={property} /></TabsContent>
         <TabsContent value="content"><ContentTab property={property} /></TabsContent>
         <TabsContent value="recs"><RecommendationsTab property={property} /></TabsContent>
         <TabsContent value="upsells"><UpsellsTab /></TabsContent>
-        <TabsContent value="branding"><BrandingTab property={property} /></TabsContent>
         <TabsContent value="languages"><LanguagesTab property={property} /></TabsContent>
-        <TabsContent value="settings"><SettingsTab property={property} /></TabsContent>
         <TabsContent value="share"><ShareTab property={property} /></TabsContent>
         <TabsContent value="analytics"><AnalyticsTab views={views} totalViews={property._count.views} /></TabsContent>
         <TabsContent value="inbox"><InboxTab property={property} /></TabsContent>
