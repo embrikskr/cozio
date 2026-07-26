@@ -8,7 +8,6 @@ import {
   ChevronUp,
   ChevronDown,
   Loader2,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Icon } from "@/components/icon";
@@ -258,28 +257,6 @@ function TopicDialog({
   const [videoUrl, setVideoUrl] = useState(topic?.videoUrl ?? "");
   const [embedUrl, setEmbedUrl] = useState(topic?.embedUrl ?? "");
   const [pending, start] = useTransition();
-  const [aiBusy, setAiBusy] = useState(false);
-
-  async function runAssist() {
-    if (!title.trim()) return toast.error("Add a title first so the AI knows the topic");
-    setAiBusy(true);
-    try {
-      const res = await fetch("/api/ai/assist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId, topicTitle: title, existing: body }),
-      });
-      const data = await res.json();
-      if (data.content) {
-        setBody(data.content);
-        toast.success(data.aiEnabled ? "Draft written ✨" : "Template inserted (add an API key for AI)");
-      } else {
-        toast.error("Couldn't generate content");
-      }
-    } finally {
-      setAiBusy(false);
-    }
-  }
 
   function save() {
     if (!title.trim()) return toast.error("Give the topic a title");
@@ -312,12 +289,7 @@ function TopicDialog({
             <IconPicker value={icon} onChange={setIcon} />
           </div>
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <Label className="mb-0">Content</Label>
-              <Button type="button" variant="secondary" size="sm" onClick={runAssist} disabled={aiBusy}>
-                {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />} Write with AI
-              </Button>
-            </div>
+            <Label htmlFor="t-body">Content</Label>
             <Textarea id="t-body" value={body} onChange={(e) => setBody(e.target.value)} rows={7} placeholder="Write the details guests need…" />
           </div>
           <ImageUpload label="Image (optional)" value={image} onChange={setImage} prefix="topics" />

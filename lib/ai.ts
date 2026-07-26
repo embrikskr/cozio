@@ -128,29 +128,6 @@ function templateGuide(input: { name: string; type: string; location?: string })
 }
 
 // ----------------------------------------------------------------------------
-// 2. AI content assistant (writes/improves a single topic body)
-// ----------------------------------------------------------------------------
-
-export async function assistContent(input: {
-  topicTitle: string;
-  instruction?: string;
-  propertyName: string;
-  existing?: string;
-}): Promise<string> {
-  const text = await callClaude({
-    system:
-      "You write concise, warm guidebook content for short-term rental guests. Use short paragraphs and markdown lists. Return only the content, no preamble.",
-    prompt: `Property: ${input.propertyName}. Topic: "${input.topicTitle}". ${
-      input.existing ? `Improve/expand this draft:\n${input.existing}` : "Write helpful content from scratch."
-    }${input.instruction ? `\nExtra instruction: ${input.instruction}` : ""}`,
-    maxTokens: 600,
-  });
-  if (text) return text.trim();
-  // Fallback heuristic
-  return `Here's what you need to know about **${input.topicTitle.toLowerCase()}** at ${input.propertyName}:\n\n- Key detail one\n- Key detail two\n- Anything guests commonly ask\n\n_(Add an Anthropic API key to generate this automatically.)_`;
-}
-
-// ----------------------------------------------------------------------------
 // 3b. AI trip planner — a day-by-day itinerary from the host's local picks
 // ----------------------------------------------------------------------------
 
