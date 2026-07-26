@@ -102,7 +102,7 @@ export default function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        Questions? Email <a href="mailto:support@cozio.eu">support@cozio.eu</a>.
+        Questions? Email <a href="mailto:emb.skrindo@gmail.com">emb.skrindo@gmail.com</a>.
       </p>
     </>
   );

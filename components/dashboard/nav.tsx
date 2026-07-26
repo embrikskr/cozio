@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, CreditCard, LogOut, Menu, X, MessageSquare, ExternalLink } from "lucide-react";
+import { Home, CreditCard, LogOut, Menu, X, MessageSquare, ExternalLink, LifeBuoy } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn, initials } from "@/lib/utils";
 
@@ -23,6 +23,10 @@ const sections: { label: string; links: { href: string; label: string; icon: Rea
       // The page still exists at /dashboard/integrations but only announces
       // that they are coming — it no longer collects third-party credentials.
       { href: "/dashboard/billing", label: "Plan & billing", icon: CreditCard },
+      // A host who hits a problem had nowhere to turn: no contact link existed
+      // anywhere in the app, and the addresses promised in the legal pages were
+      // on a domain with no mail set up, so they bounced.
+      { href: "mailto:emb.skrindo@gmail.com", label: "Get help", icon: LifeBuoy },
     ],
   },
 ];

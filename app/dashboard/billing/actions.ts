@@ -156,3 +156,48 @@ export async function propertyQuota(): Promise<{
     blockedReason: stripeReady() ? propertyLimitReason(user, count) : null,
   };
 }
+
+/**
+ * Delete the account and everything under it.
+ *
+ * The privacy policy offers erasure on request, which is lawful but means every
+ * request is manual work — and until now the address it pointed at did not
+ * receive mail, so requests went nowhere. A host can now do it themselves.
+ *
+ * The subscription is cancelled first. Deleting the row while Stripe still has
+ * an active subscription would keep charging a card belonging to an account
+ * that no longer exists, which is the worst possible order to do this in.
+ *
+ * Properties, guidebooks, guest leads, orders and reviews all cascade from the
+ * user row (see prisma/schema.prisma), so one delete removes the lot.
+ */
+export async function deleteAccount(confirmEmail: string): Promise<{ ok: boolean; error?: string }> {
+  const userId = await requireUserId();
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { email: true, stripeSubscriptionId: true, stripeCustomerId: true },
+  });
+
+  // Typing the address is the confirmation. A "are you sure?" dialog is too
+  // easy to click through for something with no undo.
+  if (confirmEmail.trim().toLowerCase() !== user.email.toLowerCase()) {
+    return { ok: false, error: "That doesn't match the email on this account." };
+  }
+
+  if (stripe && user.stripeSubscriptionId) {
+    try {
+      await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+    } catch (e) {
+      // Refuse rather than delete: an orphaned live subscription bills a card
+      // for an account nobody can log into to stop it.
+      console.error("[account] could not cancel subscription for", userId, e);
+      return {
+        ok: false,
+        error: "We couldn't cancel your subscription just now. Please try again, or email us.",
+      };
+    }
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+  return { ok: true };
+}

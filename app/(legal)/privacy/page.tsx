@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         data below, {APP_NAME} is the <strong>data controller</strong> of host account data, and a{" "}
         <strong>data processor</strong> acting on a host&apos;s behalf for the guest information that host collects
         through their guidebook (the host is the controller of that guest data). Contact us at{" "}
-        <a href="mailto:privacy@cozio.eu">privacy@cozio.eu</a>.
+        <a href="mailto:emb.skrindo@gmail.com">emb.skrindo@gmail.com</a>.
       </p>
 
       <h2>Information we collect</h2>
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>
-        Questions about this policy or your data? Email <a href="mailto:privacy@cozio.eu">privacy@cozio.eu</a>.
+        Questions about this policy or your data? Email <a href="mailto:emb.skrindo@gmail.com">emb.skrindo@gmail.com</a>.
       </p>
     </>
   );

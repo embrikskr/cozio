@@ -444,14 +444,21 @@ export default function LandingPage() {
               </p>
             </div>
             <FooterCol title="Product" links={[["Features", "#features"], ["Live demo", "/g/brygga"], ["Pricing", "/pricing"], ["Log in", "/login"]]} />
-            <FooterCol title="Company" links={[["About", "#"], ["Journal", "#"], ["Contact", "#"]]} />
+            {/* "About" and "Journal" pointed at "#" — links that look real and
+                do nothing. Gone until there is something behind them. Contact
+                is a working address, which is the one a customer needs. */}
+            <FooterCol title="Company" links={[["Contact", "mailto:emb.skrindo@gmail.com"]]} />
             <FooterCol title="Legal" links={[["Privacy", "/privacy"], ["Terms", "/terms"]]} />
           </div>
           <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-line pt-6 text-sm text-muted sm:flex-row">
             <p>© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
-            <div className="flex items-center gap-5">
-              {["English", "Norsk", "Deutsch", "Español"].map((l) => <span key={l} className="cursor-pointer hover:text-night">{l}</span>)}
-            </div>
+            {/* A language switcher used to sit here — four words styled as
+                buttons, wired to nothing. The guidebooks are multilingual; this
+                marketing page is not, and pretending otherwise is worse than
+                saying nothing. */}
+            <a href="mailto:emb.skrindo@gmail.com" className="hover:text-night">
+              emb.skrindo@gmail.com
+            </a>
           </div>
         </div>
       </footer>

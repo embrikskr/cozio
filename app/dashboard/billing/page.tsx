@@ -5,6 +5,7 @@ import { monthlyTotal, annualTotal, avgPerProperty, PRICING } from "@/lib/consta
 import { stripeReady } from "@/lib/stripe";
 import { PricingCalculator } from "@/components/pricing-calculator";
 import { SubscribeButton, ManageBillingButton } from "@/components/dashboard/billing-buttons";
+import { DeleteAccount } from "@/components/dashboard/delete-account";
 
 export default async function BillingPage() {
   const userId = await requireUserId();
@@ -86,6 +87,8 @@ export default async function BillingPage() {
           </p>
         </div>
       )}
+
+      <DeleteAccount email={user.email} />
     </div>
   );
 }
