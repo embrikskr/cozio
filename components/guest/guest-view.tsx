@@ -104,7 +104,10 @@ export function GuestView({ property }: { property: GuestProperty }) {
 
   const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "home", label: "Home", icon: Home },
-    { id: "info", label: "Info", icon: Info },
+    // Labelled "Guide", not "Info": the tab holds the guidebook's chapters and
+    // the page header already says so. The practical info a guest looks for
+    // first — check-in, Wi-Fi, directions — is on Home.
+    { id: "info", label: "Guide", icon: Info },
     ...(hasMap ? [{ id: "map" as TabId, label: "Map", icon: MapIcon }] : []),
     ...(hasExtras ? [{ id: "extras" as TabId, label: "Extras", icon: Tag }] : []),
     ...(hasChat ? [{ id: "chat" as TabId, label: "Chat", icon: MessageCircle }] : []),
@@ -138,8 +141,11 @@ export function GuestView({ property }: { property: GuestProperty }) {
             location={location}
             mapsHref={mapsHref}
             allLangs={allLangs}
+            parkingInfo={parkingInfo}
+            emergencyInfo={emergencyInfo}
             lang={lang}
             setLang={setLang}
+            openDetail={setDetail}
             onCheckIn={property.checkInEnabled ? () => setShowCheckIn(true) : undefined}
           />
         )}
@@ -348,9 +354,12 @@ function HomeTab({
   checkInInfo,
   location,
   mapsHref,
+  parkingInfo,
+  emergencyInfo,
   allLangs,
   lang,
   setLang,
+  openDetail,
   onCheckIn,
 }: {
   property: GuestProperty;
@@ -360,11 +369,15 @@ function HomeTab({
   checkInInfo: string;
   location: string;
   mapsHref: string | null;
+  parkingInfo: string;
+  emergencyInfo: string;
   allLangs: string[];
   lang: string;
   setLang: (l: string) => void;
+  openDetail: (d: Detail) => void;
   onCheckIn?: () => void;
 }) {
+  const rows = buildInfoRows({ property, checkInInfo, parkingInfo, emergencyInfo, mapsHref });
   return (
     <div>
       {/* Hero */}
@@ -464,11 +477,11 @@ function HomeTab({
           </section>
         )}
 
-        {/* The guide's table of contents used to sit here, which meant the
-            guidebook appeared in two places: a chapter list on Home and a
-            searchable version of the same content under Info. Home is now the
-            welcome — cover, check-in, a note from the host — and everything you
-            look things up in lives on the Info tab. */}
+        {/* The practical rows. A guest who has just opened the link wants the
+            door code, the Wi-Fi and the address — not a table of contents, which
+            is what used to sit here. The guidebook's chapters live on the guide
+            tab; this is what you need in the first five minutes. */}
+        {rows.length > 0 && <InfoRowsList rows={rows} brand={brand} openDetail={openDetail} />}
 
         <footer className="pb-2 pt-6 text-center text-xs text-ink-400">
           Powered by Cozio · Add this guide to your home screen for quick access
@@ -478,31 +491,33 @@ function HomeTab({
   );
 }
 
-function InfoTab({
+/** A practical row: check-in, Wi-Fi, directions and the like. */
+type InfoRow = {
+  id: string;
+  icon: React.ElementType;
+  title: string;
+  sub?: string | null;
+} & ({ href: string } | { detail: Detail });
+
+/**
+ * The practical rows. Shared, because Home renders them and the guide tab still
+ * searches them — a guest who types "wifi" there should not hit a dead end just
+ * because the row itself lives on another tab.
+ */
+function buildInfoRows({
   property,
-  brand,
   checkInInfo,
   parkingInfo,
   emergencyInfo,
   mapsHref,
-  openDetail,
 }: {
   property: GuestProperty;
-  brand: string;
   checkInInfo: string;
   parkingInfo: string;
   emergencyInfo: string;
   mapsHref: string | null;
-  openDetail: (d: Detail) => void;
-}) {
-  type Row = {
-    id: string;
-    icon: React.ElementType;
-    title: string;
-    sub?: string | null;
-  } & ({ href: string } | { detail: Detail });
-
-  const rows: Row[] = [];
+}): InfoRow[] {
+  const rows: InfoRow[] = [];
 
   if (property.checkInTime || checkInInfo)
     rows.push({
@@ -579,12 +594,91 @@ function InfoTab({
     detail: { kind: "contact", title: "Contact your host" },
   });
 
+  return rows;
+}
+
+/** The grouped iOS-style list of practical rows. */
+function InfoRowsList({
+  rows,
+  brand,
+  openDetail,
+}: {
+  rows: InfoRow[];
+  brand: string;
+  openDetail: (d: Detail) => void;
+}) {
+  return (
+    <div className="surface overflow-hidden rounded-2xl">
+      {rows.map((row, i) => {
+        const inner = (
+          <>
+            <span
+              className="grid size-10 shrink-0 place-items-center rounded-full"
+              style={{ background: `${brand}12`, color: brand }}
+            >
+              <row.icon className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-ink-900">{row.title}</span>
+              {row.sub && <span className="block truncate text-sm text-ink-500">{row.sub}</span>}
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-ink-300" />
+          </>
+        );
+        const cls = `flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-ink-50 ${
+          i > 0 ? "border-t border-ink-100" : ""
+        }`;
+        return "href" in row ? (
+          <a
+            key={row.id}
+            href={row.href}
+            target={row.href.startsWith("http") ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            className={cls}
+          >
+            {inner}
+          </a>
+        ) : (
+          <button key={row.id} onClick={() => openDetail(row.detail)} className={cls}>
+            {inner}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function InfoTab({
+  property,
+  brand,
+  checkInInfo,
+  parkingInfo,
+  emergencyInfo,
+  mapsHref,
+  openDetail,
+}: {
+  property: GuestProperty;
+  brand: string;
+  checkInInfo: string;
+  parkingInfo: string;
+  emergencyInfo: string;
+  mapsHref: string | null;
+  openDetail: (d: Detail) => void;
+}) {
+  const rows = buildInfoRows({ property, checkInInfo, parkingInfo, emergencyInfo, mapsHref });
+
   // --- Search across info rows, guidebook topics and recommendations ---
+  // Punctuation is stripped from both sides before comparing. Guests type
+  // "wifi"; the row is called "Wi-Fi", and a plain substring match finds
+  // nothing. Same for "check in" against "Check-in".
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const hit = (s?: string | null) => !!s && s.toLowerCase().includes(q);
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const nq = norm(q);
+  const hit = (s?: string | null) => !!s && !!nq && norm(s).includes(nq);
 
-  const matchedRows = q ? rows.filter((r) => hit(r.title) || hit(r.sub)) : rows;
+  // Only while searching — the rows themselves live on Home now.
+  const matchedRows = q ? rows.filter((r) => hit(r.title) || hit(r.sub)) : [];
   const matchedTopics = q
     ? property.sections.flatMap((s) =>
         s.topics.filter((t) => hit(t.title) || hit(t.body)).map((t) => ({ section: s.title, topic: t })),
@@ -596,10 +690,11 @@ function InfoTab({
 
   return (
     <div>
-      {/* Was "Good to know / Everything practical about your stay" — accurate
-          when this tab held only the practical rows. It now carries the whole
-          guidebook too, so the header says so. */}
-      <PageHeader title="Your guide" sub="Everything about your stay, in one place" />
+      {/* This tab is the guidebook itself now. The practical rows — check-in,
+          Wi-Fi, directions, message your host — moved to Home, where a guest
+          who has just arrived reaches for them. They still turn up here as
+          search results, so typing "wifi" never dead-ends. */}
+      <PageHeader title="Your guide" sub="House manual, local tips and everything in between" />
       <div className="px-5 pt-4">
         <div className="surface-flat flex items-center gap-2.5 rounded-full px-4 py-3">
           <Search className="size-4 shrink-0 text-ink-400" />
@@ -664,48 +759,18 @@ function InfoTab({
 
       <div className="p-5">
         {q && matchedRows.length > 0 && (
-          <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Practical info</p>
+          <>
+            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">Practical info</p>
+            <InfoRowsList rows={matchedRows} brand={brand} openDetail={openDetail} />
+          </>
         )}
-        {/* iOS-style grouped list */}
-        <div className="surface overflow-hidden rounded-2xl">
-          {matchedRows.map((row, i) => {
-            const inner = (
-              <>
-                <span
-                  className="grid size-10 shrink-0 place-items-center rounded-full"
-                  style={{ background: `${brand}12`, color: brand }}
-                >
-                  <row.icon className="size-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold text-ink-900">{row.title}</span>
-                  {row.sub && <span className="block truncate text-sm text-ink-500">{row.sub}</span>}
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-ink-300" />
-              </>
-            );
-            const cls = `flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-ink-50 ${
-              i > 0 ? "border-t border-ink-100" : ""
-            }`;
-            return "href" in row ? (
-              <a key={row.id} href={row.href} target={row.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={cls}>
-                {inner}
-              </a>
-            ) : (
-              <button key={row.id} onClick={() => openDetail(row.detail)} className={cls}>
-                {inner}
-              </button>
-            );
-          })}
-        </div>
 
-        {/* The guidebook chapters, moved here from Home. Hidden while searching
-            — the matches above already answer the query, and a full chapter
-            list under them would just be noise. */}
+        {/* The chapters. Hidden while searching — the matches above already
+            answer the query, and a full chapter list under them is noise. */}
         {!q && property.sections.length > 0 && (
-          <section className="pt-7">
+          <section>
             <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
-              The guide
+              Chapters
             </h2>
             <div className="surface overflow-hidden rounded-2xl">
               {property.sections.map((section, i) => (
