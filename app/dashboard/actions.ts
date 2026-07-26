@@ -137,6 +137,9 @@ export async function togglePublish(propertyId: string, published: boolean) {
   }
 
   await prisma.property.update({ where: { id: propertyId }, data: { published } });
+  // No billing sync here on purpose: the bill follows how many properties you
+  // have, not how many are live. Publishing is free; the slot was paid for when
+  // the property was created.
   revalidatePath(`/dashboard/properties/${propertyId}`);
   revalidatePath("/dashboard");
   return { ok: true, published };

@@ -28,7 +28,7 @@ export default async function BillingPage() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold tracking-tight text-ink-900">Billing</h1>
-      <p className="mt-1 text-sm text-ink-500">Per-property pricing — you only pay for what you publish.</p>
+      <p className="mt-1 text-sm text-ink-500">Per-property pricing — you pay for each property you add, and the rate drops the more you host.</p>
 
       {/* Status banner */}
       <div className="mt-6">

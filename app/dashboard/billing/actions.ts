@@ -47,6 +47,9 @@ export async function startCheckout(): Promise<{ url?: string; error?: string }>
     return { error: "Billing isn't configured yet." };
   }
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  // Every property, published or not. A property is a slot you have paid for;
+  // you buy it, then you fill it. Billing only live guides would let a host
+  // hold ten drafts for free and flip them live at will.
   const count = await prisma.property.count({ where: { userId } });
   const customerId = await ensureCustomer(user);
 
@@ -112,7 +115,10 @@ export async function syncBillingQuantity(userId: string): Promise<void> {
 
     await stripe.subscriptions.update(sub.id, {
       items: [{ id: item.id, quantity }],
-      proration_behavior: "create_prorations",
+      // Invoiced there and then, not at the end of the period. A property is
+      // paid for before it is used; a host who removes one gets the credit the
+      // same way. "create_prorations" would have deferred both to the next bill.
+      proration_behavior: "always_invoice",
     });
   } catch (e) {
     // Logged rather than swallowed: silent under-billing is the kind of bug

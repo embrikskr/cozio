@@ -77,16 +77,15 @@ export function NewPropertyButton() {
           </div>
         ) : (
           <>
-            {/* What this costs, before it costs it. The quantity on the
-                subscription moves as soon as the property exists, so a host
-                should see the number first. */}
+            {/* A property is paid for when it is added, so the number goes here
+                rather than in a surprise on next month's invoice. */}
             {quota?.isPaying && delta > 0 && (
               <div className="flex gap-3 rounded-sm border border-ink-200 bg-ink-50 p-3">
                 <TrendingUp className="mt-0.5 size-4 shrink-0 text-ink-500" />
                 <p className="text-sm text-ink-700">
                   This will be property {quota.count + 1}. Your monthly total goes from{" "}
                   <strong>${quota.currentMonthly}</strong> to <strong>${quota.nextMonthly}</strong>,
-                  charged pro rata for the rest of this period.
+                  and the rest of this period is charged to your card now.
                 </p>
               </div>
             )}
