@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { AddressField } from "@/components/dashboard/address-field";
 import { updateProperty, duplicateProperty, deleteProperty } from "@/app/dashboard/actions";
 import { PROPERTY_TYPES, LANGUAGES } from "@/lib/constants";
 import type { PropertyWithContent } from "@/lib/types";
@@ -98,18 +99,29 @@ export function SettingsTab({ property }: { property: PropertyWithContent }) {
       <Card>
         <CardHeader>
           <CardTitle>Location</CardTitle>
-          <CardDescription>Coordinates power the directions and map on the guest view.</CardDescription>
+          <CardDescription>Search for the address — the map pin follows automatically.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label>Address</Label>
-            <Input value={form.address} onChange={(e) => set("address", e.target.value)} />
-          </div>
+          {/* Latitude and longitude used to be two boxes here. They drive the
+              directions link, the weather widget and the map, but no host knows
+              them, so in practice they stayed empty and those features stayed
+              dark. Picking an address suggestion now fills them in. */}
+          <AddressField
+            value={form.address}
+            hasCoords={!!form.lat && !!form.lng}
+            onTextChange={(text) => setForm((f) => ({ ...f, address: text, lat: "", lng: "" }))}
+            onPick={(place) =>
+              setForm((f) => ({
+                ...f,
+                address: place.address,
+                lat: String(place.lat),
+                lng: String(place.lng),
+              }))
+            }
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <div><Label>City</Label><Input value={form.city} onChange={(e) => set("city", e.target.value)} /></div>
             <div><Label>Country</Label><Input value={form.country} onChange={(e) => set("country", e.target.value)} /></div>
-            <div><Label>Latitude</Label><Input value={form.lat} onChange={(e) => set("lat", e.target.value)} placeholder="62.4722" /></div>
-            <div><Label>Longitude</Label><Input value={form.lng} onChange={(e) => set("lng", e.target.value)} placeholder="6.1495" /></div>
           </div>
         </CardContent>
       </Card>

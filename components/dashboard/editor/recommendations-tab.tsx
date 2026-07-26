@@ -20,6 +20,7 @@ import {
   updateRecommendation,
   deleteRecommendation,
 } from "@/app/dashboard/actions";
+import { AddressField } from "@/components/dashboard/address-field";
 import { REC_CATEGORIES } from "@/lib/constants";
 import type { PropertyWithContent, RecommendationRow } from "@/lib/types";
 
@@ -164,22 +165,29 @@ function RecDialog({
             <Label>Description</Label>
             <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={3} placeholder="Why you love it…" />
           </div>
+          {/* Searching the place name and address here also drops its pin on
+              the guest map. The latitude and longitude boxes that used to sit
+              below are gone — a host recommending a bakery has no idea what
+              they are, so the pin never appeared. */}
+          <AddressField
+            label="Address"
+            placeholder="Search for the place…"
+            value={form.address}
+            hasCoords={!!form.lat && !!form.lng}
+            onTextChange={(text) => setForm((f) => ({ ...f, address: text, lat: "", lng: "" }))}
+            onPick={(place) =>
+              setForm((f) => ({
+                ...f,
+                address: place.address,
+                lat: String(place.lat),
+                lng: String(place.lng),
+              }))
+            }
+          />
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Address</Label>
-              <Input value={form.address} onChange={(e) => set("address", e.target.value)} />
-            </div>
-            <div>
+            <div className="col-span-2">
               <Label>Website (optional)</Label>
               <Input value={form.url} onChange={(e) => set("url", e.target.value)} placeholder="https://…" />
-            </div>
-            <div>
-              <Label>Latitude</Label>
-              <Input value={form.lat} onChange={(e) => set("lat", e.target.value)} placeholder="62.4722" />
-            </div>
-            <div>
-              <Label>Longitude</Label>
-              <Input value={form.lng} onChange={(e) => set("lng", e.target.value)} placeholder="6.1495" />
             </div>
             <div className="col-span-2">
               <Label>Image URL (optional)</Label>
