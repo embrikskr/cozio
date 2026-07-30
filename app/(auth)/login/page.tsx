@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -26,13 +26,14 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     const form = new FormData(e.currentTarget);
-    const res = await signIn("credentials", {
-      email: String(form.get("email")),
+    const { error } = await supabaseBrowser().auth.signInWithPassword({
+      email: String(form.get("email")).toLowerCase().trim(),
       password: String(form.get("password")),
-      redirect: false,
     });
     setLoading(false);
-    if (res?.error) {
+    if (error) {
+      // Deliberately one message for both wrong-password and no-such-account:
+      // distinguishing them tells a stranger which addresses have accounts.
       toast.error("Wrong email or password.");
       return;
     }

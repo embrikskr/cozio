@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { signOut } from "next-auth/react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,8 @@ export function DeleteAccount({ email }: { email: string }) {
                 start(async () => {
                   const res = await deleteAccount(confirm);
                   if (res.ok) {
-                    await signOut({ callbackUrl: "/" });
+                    await supabaseBrowser().auth.signOut();
+                    window.location.href = "/";
                   } else {
                     toast.error(res.error ?? "Something went wrong");
                   }

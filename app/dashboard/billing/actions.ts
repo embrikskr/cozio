@@ -14,6 +14,7 @@ import {
   paidPropertyCount,
 } from "@/lib/stripe";
 import { monthlyTotal } from "@/lib/constants";
+import { supabaseAdmin } from "@/lib/supabase";
 
 /** Per-property billing summary for the signed-in host. */
 export async function billingSummary() {
@@ -220,6 +221,17 @@ export async function deleteAccount(confirmEmail: string): Promise<{ ok: boolean
         ok: false,
         error: "We couldn't cancel your subscription just now. Please try again, or email us.",
       };
+    }
+  }
+
+  // Identity first, profile second. A profile without an identity is a broken
+  // login; an identity without a profile is a ghost that can still sign in.
+  const admin = supabaseAdmin();
+  if (admin) {
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) {
+      console.error("[account] could not delete auth user", userId, error.message);
+      return { ok: false, error: "We couldn't delete your account just now. Please try again." };
     }
   }
 

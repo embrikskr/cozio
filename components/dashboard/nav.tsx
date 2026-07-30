@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Home, CreditCard, LogOut, Menu, X, MessageSquare, ExternalLink, LifeBuoy } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn, initials } from "@/lib/utils";
@@ -37,7 +38,14 @@ export function DashboardNav({
   user: { name: string | null; email: string | null; plan: string };
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  async function logOut() {
+    await supabaseBrowser().auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   const isActive = (href: string) =>
     href === "/dashboard"
@@ -122,7 +130,7 @@ export function DashboardNav({
               <div className="truncate text-[11px] text-ink-400">{user.email}</div>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={logOut}
               title="Log out"
               className="rounded-sm p-2 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-900"
             >

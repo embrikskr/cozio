@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { currentUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { AuthProvider } from "@/components/session-provider";
 import { DashboardNav } from "@/components/dashboard/nav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,13 +13,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login");
 
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-ink-50/60">
+    <div className="min-h-screen bg-ink-50/60">
         <DashboardNav user={user} />
         <main className="lg:pl-60">
           <div className="mx-auto max-w-5xl px-6 py-8">{children}</div>
         </main>
       </div>
-    </AuthProvider>
   );
 }

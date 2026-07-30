@@ -1,19 +1,27 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
+// Passwords live in Supabase Auth now, so this only seeds the profile and its
+// guidebook. To sign in as the demo host, create the identity in Supabase with
+// the same id:
+//
+//   Authentication -> Users -> Add user
+//   email: demo@cozio.eu, and set DEMO_USER_ID to the uid it gives you.
+//
+// Without that the guide at /g/brygga still renders — it is public — you just
+// cannot log in as this host.
 async function main() {
   const email = "demo@cozio.eu";
-  const password = await bcrypt.hash("password123", 10);
+  const id = process.env.DEMO_USER_ID || randomUUID();
 
-  // Reset demo user
   await prisma.user.deleteMany({ where: { email } });
   const user = await prisma.user.create({
     data: {
+      id,
       email,
       name: "Demo Host",
-      password,
       billingStatus: "active", // demo account stays live so /g/brygga always works
     },
   });
@@ -283,7 +291,7 @@ async function main() {
   });
 
   console.log("✅ Seed complete.");
-  console.log("   Login:  demo@cozio.eu  /  password123");
+  console.log("   Profile: demo@cozio.eu (id ${user.id}) — create the Supabase Auth user to log in");
   console.log("   Guide:  http://localhost:3000/g/brygga");
 }
 

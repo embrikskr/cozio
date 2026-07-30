@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, MailCheck } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
@@ -17,16 +18,12 @@ export default function ForgotPasswordPage() {
     setError("");
     const email = String(new FormData(e.currentTarget).get("email"));
     try {
-      const res = await fetch("/api/auth/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      // Supabase sends the mail and owns the token. It does not say whether the
+      // address has an account, which is the behaviour we want anyway — the
+      // screen below is the same either way.
+      await supabaseBrowser().auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || "Something went wrong — try again.");
-        return;
-      }
       setSent(true);
     } catch {
       setError("Something went wrong — try again.");

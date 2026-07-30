@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { AuthProvider } from "@/components/session-provider";
 
 const PANEL_IMG =
   "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1400&q=80";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <div className="grid min-h-screen bg-ink-50 lg:grid-cols-2">
+    <div className="grid min-h-screen bg-ink-50 lg:grid-cols-2">
         <div className="flex flex-col px-6 py-8 sm:px-12">
           <Link href="/">
             <Logo />
@@ -52,6 +50,5 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </div>
-    </AuthProvider>
   );
 }

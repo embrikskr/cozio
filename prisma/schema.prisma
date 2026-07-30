@@ -18,11 +18,13 @@ datasource db {
 // Accounts
 // ----------------------------------------------------------------------------
 
+/// Profile for a Supabase Auth user. `id` is the Supabase auth uid — identity,
+/// email and password live in auth.users, not here. Deleting the auth user
+/// should be followed by deleting this row (see deleteAccount).
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id // Supabase auth uid (uuid)
   email     String   @unique
   name      String?
-  password  String
   plan      String   @default("free") // legacy, unused (per-property billing now)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

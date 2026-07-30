@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -36,10 +36,9 @@ export default function RegisterPage() {
       return;
     }
 
-    await signIn("credentials", {
-      email: payload.email,
-      password: payload.password,
-      redirect: false,
+    await supabaseBrowser().auth.signInWithPassword({
+      email: String(form.get("email")).toLowerCase().trim(),
+      password: String(form.get("password")),
     });
     router.push("/dashboard");
     router.refresh();

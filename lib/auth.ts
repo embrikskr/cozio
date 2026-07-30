@@ -1,56 +1,41 @@
-import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { getServerSession } from "next-auth";
-import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
+import { supabaseServer } from "./supabase";
 
-export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        });
-        if (!user) return null;
-        const ok = await bcrypt.compare(credentials.password, user.password);
-        if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.name ?? undefined };
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.uid = user.id;
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.uid) {
-        (session.user as { id?: string }).id = token.uid as string;
-      }
-      return session;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+// Identity lives in Supabase Auth: email, password, sessions, and later Google
+// and Apple sign-in. Our `User` table is a profile keyed to the same id, holding
+// what Supabase has no opinion about — Stripe customer, billing status, trial
+// end, and the properties a host owns.
+//
+// This replaced NextAuth with a credentials provider and a bcrypt hash in our
+// own column. Passwords are no longer ours to store, which is the point:
+// verification, resets, MFA and social providers stop being code we have to
+// keep correct.
+//
+// These two helpers are the only place the rest of the app asks "who is this?",
+// so swapping the provider underneath touched one file rather than fifteen.
 
-/** Returns the signed-in user's id, or null. */
+/** The signed-in host's id, or null. Matches the primary key in `User`. */
 export async function currentUserId(): Promise<string | null> {
   try {
-    const session = await getServerSession(authOptions);
-    return (session?.user as { id?: string } | undefined)?.id ?? null;
+    const supabase = await supabaseServer();
+    // getUser() verifies the token with Supabase. getSession() would trust
+    // whatever sits in the cookie, and a forged cookie must not be enough to
+    // read someone else's guidebooks.
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return null;
+    return data.user.id;
   } catch {
-    // A stale or undecryptable session cookie (e.g. NEXTAUTH_SECRET rotated)
-    // must never crash a page — treat it as signed-out.
+    // Misconfiguration or a stale cookie must read as signed-out, never crash.
+    return null;
+  }
+}
+
+/** The signed-in host's email — for display, and for confirming deletion. */
+export async function currentUserEmail(): Promise<string | null> {
+  try {
+    const supabase = await supabaseServer();
+    const { data } = await supabase.auth.getUser();
+    return data.user?.email ?? null;
+  } catch {
     return null;
   }
 }
