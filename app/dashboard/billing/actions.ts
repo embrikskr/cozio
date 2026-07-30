@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/guard";
 import {
@@ -8,7 +9,9 @@ import {
   STRIPE_PRICE_ID,
   APP_URL,
   TRIAL_PROPERTY_LIMIT,
+  MAX_PROPERTIES,
   propertyLimitReason,
+  paidPropertyCount,
 } from "@/lib/stripe";
 import { monthlyTotal } from "@/lib/constants";
 
@@ -41,16 +44,26 @@ async function ensureCustomer(user: {
  * Start a Stripe Checkout subscription, billed per property (quantity = number
  * of properties). Honours any remaining free trial. Returns the URL to redirect to.
  */
-export async function startCheckout(): Promise<{ url?: string; error?: string }> {
+export async function startCheckout(
+  quantity: number,
+): Promise<{ url?: string; error?: string }> {
   const userId = await requireUserId();
   if (!stripeReady() || !stripe || !STRIPE_PRICE_ID) {
     return { error: "Billing isn't configured yet." };
   }
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  // Every property, published or not. A property is a slot you have paid for;
-  // you buy it, then you fill it. Billing only live guides would let a host
-  // hold ten drafts for free and flip them live at will.
-  const count = await prisma.property.count({ where: { userId } });
+
+  // The host says how many properties they are buying. It used to be inferred
+  // from how many they had already created, which meant someone with five
+  // apartments had to subscribe for one and then add and pay four more times.
+  const existing = await prisma.property.count({ where: { userId } });
+  const count = Math.floor(Number(quantity));
+  if (!Number.isFinite(count) || count < 1 || count > MAX_PROPERTIES) {
+    return { error: `Choose between 1 and ${MAX_PROPERTIES} properties.` };
+  }
+  if (count < existing) {
+    return { error: `You already have ${existing} properties — delete some first.` };
+  }
   const customerId = await ensureCustomer(user);
 
   // Don't charge until the in-app trial ends.
@@ -84,47 +97,56 @@ export async function openBillingPortal(): Promise<{ url?: string; error?: strin
 }
 
 /**
- * Keep the subscription quantity in sync with the property count. Called after
- * a property is created or deleted.
+ * Change how many properties the plan covers.
  *
- * Prorated, deliberately. This ran with `proration_behavior: "none"`, which
- * meant a property added the day after an invoice was free until the next one —
- * add five that day and you had five free properties for a month. With
- * `create_prorations` the part-month is metered onto the next invoice, and
- * removing a property produces a credit the same way. Nobody is charged at the
- * moment they click; the adjustment simply lands where it belongs.
- *
- * Best-effort — never throws into the caller. A failure here under-bills rather
- * than blocking a host mid-task, and the next create or delete reconciles it.
+ * Invoiced immediately in both directions, so a host pays for what they add
+ * when they add it and is credited when they give it back. The floor is how
+ * many properties they actually have — dropping below that would leave guides
+ * live that nobody is paying for, so they delete first, then reduce.
  */
-export async function syncBillingQuantity(userId: string): Promise<void> {
-  if (!stripeReady() || !stripe) return;
+export async function changePlanQuantity(
+  quantity: number,
+): Promise<{ ok: boolean; error?: string }> {
+  const userId = await requireUserId();
+  if (!stripeReady() || !stripe) return { ok: false, error: "Billing isn't configured yet." };
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { stripeSubscriptionId: true },
+  });
+  if (!user.stripeSubscriptionId) return { ok: false, error: "No subscription to change." };
+
+  const next = Math.floor(Number(quantity));
+  if (!Number.isFinite(next) || next < 1 || next > MAX_PROPERTIES) {
+    return { ok: false, error: `Choose between 1 and ${MAX_PROPERTIES} properties.` };
+  }
+
+  const existing = await prisma.property.count({ where: { userId } });
+  if (next < existing) {
+    return {
+      ok: false,
+      error: `You have ${existing} properties. Delete ${existing - next} before going down to ${next}.`,
+    };
+  }
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { stripeSubscriptionId: true },
-    });
-    if (!user?.stripeSubscriptionId) return;
-    const count = await prisma.property.count({ where: { userId } });
     const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
     const item = sub.items.data[0];
-    if (!item) return;
-
-    const quantity = Math.max(1, count);
-    if (item.quantity === quantity) return; // nothing to do, and no stray proration
+    if (!item) return { ok: false, error: "Subscription has no line to update." };
+    if (item.quantity === next) return { ok: true };
 
     await stripe.subscriptions.update(sub.id, {
-      items: [{ id: item.id, quantity }],
-      // Invoiced there and then, not at the end of the period. A property is
-      // paid for before it is used; a host who removes one gets the credit the
-      // same way. "create_prorations" would have deferred both to the next bill.
+      items: [{ id: item.id, quantity: next }],
       proration_behavior: "always_invoice",
     });
   } catch (e) {
-    // Logged rather than swallowed: silent under-billing is the kind of bug
-    // that only shows up as missing revenue months later.
-    console.error("[billing] quantity sync failed for", userId, e);
+    console.error("[billing] plan change failed for", userId, e);
+    return { ok: false, error: "Couldn't update your plan — please try again." };
   }
+
+  revalidatePath("/dashboard/billing");
+  revalidatePath("/dashboard");
+  return { ok: true };
 }
 
 /**
@@ -134,6 +156,7 @@ export async function syncBillingQuantity(userId: string): Promise<void> {
  */
 export async function propertyQuota(): Promise<{
   count: number;
+  paid: number | null;
   isPaying: boolean;
   trialLimit: number;
   currentMonthly: number;
@@ -143,17 +166,19 @@ export async function propertyQuota(): Promise<{
   const userId = await requireUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { billingStatus: true, trialEndsAt: true },
+    select: { billingStatus: true, trialEndsAt: true, stripeSubscriptionId: true },
   });
   const count = await prisma.property.count({ where: { userId } });
+  const paid = await paidPropertyCount(user.stripeSubscriptionId);
 
   return {
     count,
+    paid,
     isPaying: user.billingStatus === "active",
     trialLimit: TRIAL_PROPERTY_LIMIT,
     currentMonthly: monthlyTotal(count),
     nextMonthly: monthlyTotal(count + 1),
-    blockedReason: stripeReady() ? propertyLimitReason(user, count) : null,
+    blockedReason: stripeReady() ? propertyLimitReason(user, count, paid) : null,
   };
 }
 

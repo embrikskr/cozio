@@ -8,8 +8,7 @@ import { currentUserId } from "@/lib/auth";
 import { uniqueSlug } from "@/lib/utils";
 import { STARTER_SECTIONS } from "@/lib/constants";
 import { generateGuide } from "@/lib/ai";
-import { stripeReady, billingActive, propertyLimitReason } from "@/lib/stripe";
-import { syncBillingQuantity } from "@/app/dashboard/billing/actions";
+import { stripeReady, billingActive, propertyLimitReason, paidPropertyCount } from "@/lib/stripe";
 import {
   propertySchema,
   sectionSchema,
@@ -55,10 +54,11 @@ async function assertCanAddProperty(userId: string): Promise<void> {
   if (!stripeReady()) return; // billing not configured (local dev) — don't block
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { billingStatus: true, trialEndsAt: true },
+    select: { billingStatus: true, trialEndsAt: true, stripeSubscriptionId: true },
   });
   const count = await prisma.property.count({ where: { userId } });
-  const reason = propertyLimitReason(user, count);
+  const paid = await paidPropertyCount(user.stripeSubscriptionId);
+  const reason = propertyLimitReason(user, count, paid);
   if (reason) throw new Error(reason);
 }
 
@@ -100,7 +100,6 @@ export async function createProperty(formData: FormData) {
     },
   });
 
-  await syncBillingQuantity(userId);
   revalidatePath("/dashboard");
   redirect(`/dashboard/properties/${property.id}`);
 }
@@ -148,7 +147,6 @@ export async function togglePublish(propertyId: string, published: boolean) {
 export async function deleteProperty(propertyId: string) {
   const userId = await assertOwner(propertyId);
   await prisma.property.delete({ where: { id: propertyId } });
-  await syncBillingQuantity(userId);
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
@@ -470,7 +468,6 @@ export async function createPropertyFromAI(formData: FormData) {
     },
   });
 
-  await syncBillingQuantity(userId);
   revalidatePath("/dashboard");
   redirect(`/dashboard/properties/${property.id}`);
 }

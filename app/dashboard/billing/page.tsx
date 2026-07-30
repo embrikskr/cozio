@@ -2,9 +2,8 @@ import { CreditCard, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/guard";
 import { monthlyTotal, annualTotal, avgPerProperty, PRICING } from "@/lib/constants";
-import { stripeReady } from "@/lib/stripe";
-import { PricingCalculator } from "@/components/pricing-calculator";
-import { SubscribeButton, ManageBillingButton } from "@/components/dashboard/billing-buttons";
+import { stripeReady, paidPropertyCount } from "@/lib/stripe";
+import { PlanPicker, ManageBillingButton } from "@/components/dashboard/billing-buttons";
 import { DeleteAccount } from "@/components/dashboard/delete-account";
 
 export default async function BillingPage() {
@@ -15,6 +14,7 @@ export default async function BillingPage() {
     prisma.property.count({ where: { userId, published: true } }),
   ]);
 
+  const paidCount = await paidPropertyCount(user.stripeSubscriptionId);
   const monthly = monthlyTotal(propertyCount);
   const annual = annualTotal(propertyCount);
   const avg = avgPerProperty(propertyCount);
@@ -45,15 +45,23 @@ export default async function BillingPage() {
         ) : trialDaysLeft && trialDaysLeft > 0 ? (
           <Banner tone="info" icon={Clock} title={`${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left in your free trial`}>
             Add a payment method now and you won&apos;t be charged until the trial ends.
-            <span className="ml-2">{billingLive ? <SubscribeButton /> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
+            <span className="ml-2">{billingLive ? <span className="text-xs text-ink-500">Choose your plan below.</span> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
           </Banner>
         ) : (
           <Banner tone="warn" icon={AlertTriangle} title="Trial ended">
             Add a payment method to publish your guides.
-            <span className="ml-2">{billingLive ? <SubscribeButton /> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
+            <span className="ml-2">{billingLive ? <span className="text-xs text-ink-500">Choose your plan below.</span> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
           </Banner>
         )}
       </div>
+
+      {billingLive && (
+        <PlanPicker
+          propertyCount={propertyCount}
+          paidCount={paidCount}
+          isSubscribed={status === "active"}
+        />
+      )}
 
       {/* Current usage */}
       <div className="mt-7 grid grid-cols-2 border border-ink-200 bg-white lg:grid-cols-4 lg:divide-x lg:divide-ink-200">
@@ -66,16 +74,15 @@ export default async function BillingPage() {
           <div key={s.label} className={`p-5 ${i < 2 ? "border-b border-ink-200 lg:border-b-0" : ""} ${i % 2 === 0 ? "border-r border-ink-200 lg:border-r-0" : ""}`}>
             <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-400">{s.label}</div>
             <div className="mt-2 font-display text-3xl font-semibold text-ink-900">{s.value}</div>
-            <div className="mt-0.5 text-xs text-ink-400">{s.sub}</div>
+            <div className="mt-1 text-xs text-ink-400">{s.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Estimator */}
-      <h2 className="mt-10 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-400">Estimate as you grow</h2>
-      <div className="mt-3">
-        <PricingCalculator theme="light" showIncludes={false} />
-      </div>
+      {/* A second number picker used to sit below — the marketing pricing
+          calculator, starting at 1 while the real plan above said 4. Two
+          spinners on one page, one binding and one hypothetical. The picker
+          above already shows the price live as the number changes. */}
 
       {!billingLive && (
         <div className="mt-8 flex items-center gap-3 border border-ink-200 bg-ink-50 p-5">

@@ -282,6 +282,9 @@ export const CONNECTOR_CATEGORIES = ["Channels", "PMS", "Payments", "Content"] a
 // and ~2 months free on annual billing.
 // ----------------------------------------------------------------------------
 
+/** Upper bound on properties per plan. A sanity bound, not a business rule. */
+export const MAX_PROPERTIES = 100;
+
 export const PRICING = {
   trialDays: 14,
   annualMonthsFree: 2,
