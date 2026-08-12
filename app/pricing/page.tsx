@@ -8,7 +8,7 @@ export const metadata = { title: "Pricing" };
 
 const faqs = [
   { q: "How does per-property pricing work?", a: `You pay for the properties you publish — $${PRICING.bands[0].price} for the first, and less for each one after as you scale. The price updates live in the calculator above.` },
-  { q: "Is there a free trial?", a: `Yes — every new account gets a ${PRICING.trialDays}-day free trial. No credit card required to start.` },
+  { q: "Is there a free trial?", a: "No — you pay from your first property, starting at $9/month. Nothing is locked behind a bigger plan, and you can cancel anytime from the billing portal." },
   { q: "Can I add or remove properties anytime?", a: "Anytime. Your bill adjusts automatically — add a property in busy season, pause it when you're done." },
   { q: "What counts as a property?", a: "One property = one digital guidebook for one rental. Every feature is included on every property — no feature gates." },
   { q: "Do you offer annual billing?", a: `Yes — switch to annual in the calculator and get ${PRICING.annualMonthsFree} months free.` },
@@ -32,7 +32,7 @@ export default function PricingPage() {
           <div className="flex items-center gap-6">
             <Link href="/login" className="hidden text-sm text-muted hover:text-night sm:block">Log in</Link>
             <Link href="/register" className="bg-night px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-forest">
-              Start free
+              Get started
             </Link>
           </div>
         </div>
@@ -55,9 +55,9 @@ export default function PricingPage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <Link href="/register" className="inline-flex items-center gap-2 bg-night px-7 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest">
-            Start your {PRICING.trialDays}-day free trial <ArrowRight className="size-4" />
+            Get started <ArrowRight className="size-4" />
           </Link>
-          <span className="text-sm text-muted">No credit card · Cancel anytime</span>
+          <span className="text-sm text-muted">Every feature included · Cancel anytime</span>
         </div>
         <p className="mt-4 text-sm font-medium text-forest">
           Cheaper per property than Touch Stay, Hostfully or GuestIntro — with every feature included.

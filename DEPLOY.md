@@ -92,9 +92,11 @@ bands from `lib/constants.ts` as a single graduated Stripe Price.
 
 ## 4. Post-launch checklist
 
-- [ ] Sign up a test host → confirm the 14-day trial banner on **Billing**.
-- [ ] Add a payment method → confirm Stripe Checkout → webhook flips status to **active**.
-- [ ] Add/remove a property → confirm the subscription quantity updates in Stripe.
+- [ ] Sign up a test host → confirm **Billing** says "No plan yet" and that creating a
+      property is refused until a plan is bought.
+- [ ] Pick a number of properties → Stripe Checkout → webhook flips status to **active**.
+- [ ] Confirm the host can now create exactly that many properties, and no more.
+- [ ] Change the plan quantity up and down → confirm Stripe invoices/credits immediately.
 - [ ] Open a guidebook → ask the AI concierge a question → confirm a real answer.
 - [ ] Review `/privacy` and `/terms`, replace the placeholder contact emails, and have
       them reviewed by a professional.

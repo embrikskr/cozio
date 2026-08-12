@@ -2,8 +2,8 @@ import { supabaseServer } from "./supabase";
 
 // Identity lives in Supabase Auth: email, password, sessions, and later Google
 // and Apple sign-in. Our `User` table is a profile keyed to the same id, holding
-// what Supabase has no opinion about — Stripe customer, billing status, trial
-// end, and the properties a host owns.
+// what Supabase has no opinion about — Stripe customer, billing status, and the
+// properties a host owns.
 //
 // This replaced NextAuth with a credentials provider and a bcrypt hash in our
 // own column. Passwords are no longer ours to store, which is the point:

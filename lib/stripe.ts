@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { MAX_PROPERTIES } from "./constants";
+import { MAX_PROPERTIES, PRICING } from "./constants";
 
 export { MAX_PROPERTIES };
 
@@ -18,20 +18,23 @@ export function stripeReady(): boolean {
 
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-/** Whether the host may keep guides live: an active subscription, or a trial still running. */
-export function billingActive(user: { billingStatus: string; trialEndsAt: Date | null }): boolean {
-  if (user.billingStatus === "active") return true;
-  return user.billingStatus === "trialing" && !!user.trialEndsAt && user.trialEndsAt.getTime() > Date.now();
+/**
+ * Whether the host may keep guides live. There is no free tier and no trial:
+ * a live guidebook means a paid subscription behind it.
+ */
+export function billingActive(user: { billingStatus: string }): boolean {
+  return user.billingStatus === "active";
 }
-
-/** How many properties the free trial covers. Beyond this, a card is required. */
-export const TRIAL_PROPERTY_LIMIT = 1;
 
 /**
  * How many properties this host is paying for — the quantity on their Stripe
  * subscription, which is the only place that number is authoritative.
  *
  * Returns null when there is no subscription to read.
+ *
+ * `trialing` counts here as well. We never ask Stripe for a trial, so a
+ * subscription in that state can only come from a coupon or a comp granted by
+ * hand in the Stripe dashboard — a deliberate decision that should work.
  */
 export async function paidPropertyCount(subscriptionId: string | null): Promise<number | null> {
   if (!stripe || !subscriptionId) return null;
@@ -45,23 +48,17 @@ export async function paidPropertyCount(subscriptionId: string | null): Promise<
   }
 }
 
-export type BillingUser = { billingStatus: string; trialEndsAt: Date | null };
+export type BillingUser = { billingStatus: string };
 
 /**
- * How many properties this host may have right now.
+ * How many properties this host may have right now: exactly what they bought.
  *
- * A paying host may have exactly what they bought. Properties used to be
- * uncapped for subscribers, with the subscription quantity trailing whatever
- * they had created — which meant nobody ever chose a number, they just created
- * and got billed. Now the number is the thing you buy, and properties fill it.
- *
- * The trial covers one. Once it lapses without a subscription the answer is
- * zero: no new properties, existing ones still editable.
+ * Nothing is free. A new account can look around, but the first guidebook needs
+ * a plan behind it — so the answer for anyone without an active subscription is
+ * zero, not one.
  */
 export function propertyAllowance(user: BillingUser, paidCount: number | null): number {
-  if (user.billingStatus === "active") return paidCount ?? 0;
-  if (billingActive(user)) return TRIAL_PROPERTY_LIMIT;
-  return 0;
+  return billingActive(user) ? (paidCount ?? 0) : 0;
 }
 
 /** Why a host can't add another property, or null when they can. */
@@ -72,11 +69,11 @@ export function propertyLimitReason(
 ): string | null {
   const allowance = propertyAllowance(user, paidCount);
   if (currentCount < allowance) return null;
-  if (user.billingStatus === "active") {
+  if (billingActive(user)) {
     return `Your plan covers ${allowance} ${allowance === 1 ? "property" : "properties"}. Increase it to add another.`;
   }
-  if (allowance === 0) {
-    return "Your trial has ended — add a payment method to create more properties.";
+  if (currentCount > 0) {
+    return "Your subscription isn't active — restart it to add properties.";
   }
-  return `Your free trial covers ${TRIAL_PROPERTY_LIMIT} property. Add a payment method to create more.`;
+  return `Choose a plan to create your first guidebook — from $${PRICING.bands[0].price}/month.`;
 }

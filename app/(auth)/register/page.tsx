@@ -47,7 +47,9 @@ export default function RegisterPage() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold tracking-tight text-ink-900">Create your account</h1>
-      <p className="mt-2 text-sm text-ink-500">Start with a 14-day free trial. No credit card to begin.</p>
+      <p className="mt-2 text-sm text-ink-500">
+        Next step is choosing your plan — from $9/month for your first property. Cancel anytime.
+      </p>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <div>

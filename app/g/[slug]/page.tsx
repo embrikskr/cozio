@@ -53,11 +53,11 @@ export default async function GuidebookPage({ params }: { params: Promise<{ slug
 
   if (!property.published && !isOwner) notFound();
 
-  // Guides go dark when the host isn't paying (trial ended, no active subscription).
+  // Guides go dark when the host isn't paying — no active subscription, no guide.
   if (stripeReady() && !isOwner) {
     const owner = await prisma.user.findUnique({
       where: { id: property.userId },
-      select: { billingStatus: true, trialEndsAt: true },
+      select: { billingStatus: true },
     });
     if (!owner || !billingActive(owner)) notFound();
   }

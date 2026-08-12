@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validators";
 import { rateLimit, clientIp } from "@/lib/ratelimit";
-import { PRICING } from "@/lib/constants";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Create the identity in Supabase Auth, then the profile row that hangs the
@@ -52,13 +51,9 @@ export async function POST(req: Request) {
 
   try {
     await prisma.user.create({
-      data: {
-        id: data.user.id,
-        name,
-        email: normalizedEmail,
-        billingStatus: "trialing",
-        trialEndsAt: new Date(Date.now() + PRICING.trialDays * 86_400_000),
-      },
+      // No trial to start and no plan yet — the host picks one on Billing before
+      // their first guidebook exists.
+      data: { id: data.user.id, name, email: normalizedEmail, billingStatus: "inactive" },
     });
   } catch (e) {
     // An auth user with no profile can sign in and hit a broken dashboard.

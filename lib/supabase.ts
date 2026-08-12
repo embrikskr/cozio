@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 // Supabase Auth holds the identity — email, password hash, sessions, and later
 // Google and Apple sign-in. Our own `User` table is a profile keyed to the same
 // id, carrying the things Supabase has no opinion about: Stripe customer,
-// billing status, trial end, and the properties a host owns.
+// billing status, and the properties a host owns.
 //
 // Passwords are no longer ours to store. That is the point: verification,
 // resets, MFA and social providers come from Supabase rather than from code we

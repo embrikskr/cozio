@@ -120,7 +120,7 @@ export function PricingCalculator({
           )}
         </p>
         <p className="mt-1 text-[13px]">
-          {n} {n === 1 ? "property" : "properties"} · {PRICING.trialDays}-day free trial
+          {n} {n === 1 ? "property" : "properties"} · every feature included · cancel anytime
         </p>
 
         {showIncludes && (

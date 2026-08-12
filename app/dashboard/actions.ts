@@ -45,8 +45,8 @@ async function assertOwnsSection(sectionId: string): Promise<void> {
 
 
 /**
- * Refuse a new property when the host's plan doesn't cover it. The trial covers
- * one guidebook; paying hosts have no ceiling because each property is billed.
+ * Refuse a new property when the host's plan doesn't cover it. There is no free
+ * allowance — the first guidebook needs a paid plan like every one after it.
  * Checked here rather than only in the UI — these are server actions, callable
  * without the button.
  */
@@ -54,7 +54,7 @@ async function assertCanAddProperty(userId: string): Promise<void> {
   if (!stripeReady()) return; // billing not configured (local dev) — don't block
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { billingStatus: true, trialEndsAt: true, stripeSubscriptionId: true },
+    select: { billingStatus: true, stripeSubscriptionId: true },
   });
   const count = await prisma.property.count({ where: { userId } });
   const paid = await paidPropertyCount(user.stripeSubscriptionId);
@@ -124,14 +124,14 @@ export async function updateProperty(propertyId: string, raw: Record<string, unk
 export async function togglePublish(propertyId: string, published: boolean) {
   const userId = await assertOwner(propertyId);
 
-  // Once Stripe is live, require an active subscription (or live trial) to publish.
+  // Once Stripe is live, require an active subscription to publish.
   if (published && stripeReady()) {
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { billingStatus: true, trialEndsAt: true },
+      select: { billingStatus: true },
     });
     if (!billingActive(user)) {
-      return { ok: false, error: "Add a payment method to publish — your trial has ended." };
+      return { ok: false, error: "Your subscription isn't active — restart it to publish this guide." };
     }
   }
 

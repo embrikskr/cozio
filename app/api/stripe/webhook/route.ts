@@ -6,9 +6,12 @@ import { stripe } from "@/lib/stripe";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Map a Stripe subscription status to our coarser billingStatus.
+//
+// `trialing` maps to active on purpose. Checkout never asks for a trial, so a
+// subscription in that state was comped by hand in the Stripe dashboard, and
+// that host should have working guides.
 function mapStatus(s: Stripe.Subscription.Status): string {
-  if (s === "active") return "active";
-  if (s === "trialing") return "trialing";
+  if (s === "active" || s === "trialing") return "active";
   if (s === "past_due" || s === "unpaid") return "past_due";
   return "canceled"; // canceled | incomplete | incomplete_expired | paused
 }

@@ -19,10 +19,6 @@ export default async function BillingPage() {
   const annual = annualTotal(propertyCount);
   const avg = avgPerProperty(propertyCount);
 
-  const trialDaysLeft = user.trialEndsAt
-    ? Math.max(0, Math.ceil((user.trialEndsAt.getTime() - Date.now()) / 86_400_000))
-    : null;
-
   const status = user.billingStatus;
   const billingLive = stripeReady();
 
@@ -42,14 +38,16 @@ export default async function BillingPage() {
           <Banner tone="warn" icon={AlertTriangle} title="Payment failed">
             Update your card to keep your guides live. <span className="ml-2"><ManageBillingButton /></span>
           </Banner>
-        ) : trialDaysLeft && trialDaysLeft > 0 ? (
-          <Banner tone="info" icon={Clock} title={`${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left in your free trial`}>
-            Add a payment method now and you won&apos;t be charged until the trial ends.
+        ) : propertyCount > 0 ? (
+          // They had a plan and it stopped. Their guides are dark right now, so
+          // say that rather than making it sound like a first-time signup.
+          <Banner tone="warn" icon={AlertTriangle} title="Your subscription isn't active">
+            Your guides are offline until it restarts.
             <span className="ml-2">{billingLive ? <span className="text-xs text-ink-500">Choose your plan below.</span> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
           </Banner>
         ) : (
-          <Banner tone="warn" icon={AlertTriangle} title="Trial ended">
-            Add a payment method to publish your guides.
+          <Banner tone="info" icon={Clock} title="No plan yet">
+            Pick how many properties you need and pay for them — then you can create your first guidebook.
             <span className="ml-2">{billingLive ? <span className="text-xs text-ink-500">Choose your plan below.</span> : <span className="text-xs text-ink-400">Billing activates once Stripe is connected.</span>}</span>
           </Banner>
         )}

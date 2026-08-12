@@ -8,10 +8,11 @@ import {
   ShoppingBag,
   ExternalLink,
   ChevronRight,
+  CreditCard,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/guard";
-import { PROPERTY_TYPES, monthlyTotal } from "@/lib/constants";
+import { PROPERTY_TYPES, monthlyTotal, PRICING } from "@/lib/constants";
 import { cssUrl } from "@/lib/utils";
 import { NewPropertyButton } from "@/components/dashboard/new-property";
 import { CopyLinkButton } from "@/components/dashboard/copy-link";
@@ -34,6 +35,9 @@ export default async function DashboardHome() {
 
   const liveCount = properties.filter((p) => p.published).length;
   const monthlyCost = monthlyTotal(properties.length);
+  // Cheap enough to read off the profile row — the exact allowance comes from
+  // Stripe, but "has a plan at all" is what decides which empty state to show.
+  const hasPlan = user.billingStatus === "active";
 
   const stats: { icon: React.ElementType; label: string; value: string | number; sub?: string }[] = [
     { icon: BookOpen, label: "Properties", value: properties.length, sub: `${liveCount} live` },
@@ -74,14 +78,29 @@ export default async function DashboardHome() {
         {properties.length === 0 ? (
           <div className="mt-3 border border-dashed border-ink-300 bg-white p-12 text-center">
             <div className="mx-auto grid size-12 place-items-center bg-brand-50 text-brand-700">
-              <BookOpen className="size-6" />
+              {hasPlan ? <BookOpen className="size-6" /> : <CreditCard className="size-6" />}
             </div>
-            <h3 className="mt-4 font-display text-lg font-semibold text-ink-900">Create your first guidebook</h3>
+            {/* Sending someone to a create dialog that will only refuse them is a
+                dead end. Without a plan, the honest first step is the plan. */}
+            <h3 className="mt-4 font-display text-lg font-semibold text-ink-900">
+              {hasPlan ? "Create your first guidebook" : "Choose your plan to get started"}
+            </h3>
             <p className="mx-auto mt-1 max-w-sm text-sm text-ink-500">
-              Generate one with AI or start from our template — you can be ready to share in minutes.
+              {hasPlan
+                ? "Generate one with AI or start from our template — you can be ready to share in minutes."
+                : `Pick how many properties you host — from $${PRICING.bands[0].price}/month for the first, less for each one after. Then build your guidebooks.`}
             </p>
             <div className="mt-6 flex justify-center">
-              <NewPropertyButton />
+              {hasPlan ? (
+                <NewPropertyButton />
+              ) : (
+                <Link
+                  href="/dashboard/billing"
+                  className="inline-flex items-center gap-2 bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ink-800"
+                >
+                  <CreditCard className="size-4" /> Choose a plan
+                </Link>
+              )}
             </div>
           </div>
         ) : (

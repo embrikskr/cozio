@@ -32,8 +32,9 @@ model User {
   // Billing (Stripe, per-property subscription)
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?
-  billingStatus        String    @default("trialing") // trialing | active | past_due | canceled
-  trialEndsAt          DateTime?
+  // inactive = signed up, no plan yet. There is no free trial: a host pays
+  // before the first property exists.
+  billingStatus        String    @default("inactive") // inactive | active | past_due | canceled
 
   properties   Property[]
   integrations Integration[]

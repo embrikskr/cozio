@@ -8,7 +8,6 @@ import {
   stripeReady,
   STRIPE_PRICE_ID,
   APP_URL,
-  TRIAL_PROPERTY_LIMIT,
   MAX_PROPERTIES,
   propertyLimitReason,
   paidPropertyCount,
@@ -43,7 +42,8 @@ async function ensureCustomer(user: {
 
 /**
  * Start a Stripe Checkout subscription, billed per property (quantity = number
- * of properties). Honours any remaining free trial. Returns the URL to redirect to.
+ * of properties). Charged straight away — there is no trial to wait out.
+ * Returns the URL to redirect to.
  */
 export async function startCheckout(
   quantity: number,
@@ -67,16 +67,10 @@ export async function startCheckout(
   }
   const customerId = await ensureCustomer(user);
 
-  // Don't charge until the in-app trial ends.
-  const trialDaysLeft = user.trialEndsAt
-    ? Math.ceil((user.trialEndsAt.getTime() - Date.now()) / 86_400_000)
-    : 0;
-
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: STRIPE_PRICE_ID, quantity: Math.max(1, count) }],
-    subscription_data: trialDaysLeft > 0 ? { trial_period_days: trialDaysLeft } : undefined,
     allow_promotion_codes: true,
     success_url: `${APP_URL}/dashboard/billing?success=1`,
     cancel_url: `${APP_URL}/dashboard/billing`,
@@ -159,7 +153,6 @@ export async function propertyQuota(): Promise<{
   count: number;
   paid: number | null;
   isPaying: boolean;
-  trialLimit: number;
   currentMonthly: number;
   nextMonthly: number;
   blockedReason: string | null;
@@ -167,7 +160,7 @@ export async function propertyQuota(): Promise<{
   const userId = await requireUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { billingStatus: true, trialEndsAt: true, stripeSubscriptionId: true },
+    select: { billingStatus: true, stripeSubscriptionId: true },
   });
   const count = await prisma.property.count({ where: { userId } });
   const paid = await paidPropertyCount(user.stripeSubscriptionId);
@@ -176,7 +169,6 @@ export async function propertyQuota(): Promise<{
     count,
     paid,
     isPaying: user.billingStatus === "active",
-    trialLimit: TRIAL_PROPERTY_LIMIT,
     currentMonthly: monthlyTotal(count),
     nextMonthly: monthlyTotal(count + 1),
     blockedReason: stripeReady() ? propertyLimitReason(user, count, paid) : null,

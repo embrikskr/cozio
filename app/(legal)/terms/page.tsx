@@ -25,12 +25,20 @@ export default function TermsPage() {
         account. You must provide accurate information and be old enough to enter a contract in your jurisdiction.
       </p>
 
-      <h2>Free trial and billing</h2>
+      <h2>Billing</h2>
       <ul>
-        <li>New accounts include a 14-day free trial. No charge is made during the trial.</li>
         <li>
-          After the trial, the Service is billed per published property. Your total updates automatically as you add or
-          remove properties. Prices are shown in the app before you subscribe.
+          There is no free trial. Creating an account is free, but a subscription is required before you can create
+          your first property, and payment is taken when you subscribe.
+        </li>
+        <li>
+          The Service is billed per property. You choose how many properties your plan covers, and the price per
+          property falls as that number rises. Prices are shown in the app before you subscribe.
+        </li>
+        <li>
+          Changing how many properties your plan covers takes effect immediately and is invoiced immediately: increases
+          are charged pro rata for the rest of the period, decreases are credited. You cannot reduce your plan below the
+          number of properties you currently have — delete properties first.
         </li>
         <li>
           Payments are processed by Stripe. Subscriptions renew automatically until cancelled. You can cancel anytime
@@ -42,9 +50,9 @@ export default function TermsPage() {
       <h2>Consumer right of withdrawal</h2>
       <p>
         If you are a consumer in the EU/EEA, you normally have a 14-day right to withdraw from a distance contract. By
-        starting to use the Service during this period you ask us to begin performance immediately, and the right of
-        withdrawal ends once the Service has been fully provided. This does not affect the free trial, which you can
-        cancel at any time before it converts to a paid subscription.
+        subscribing you ask us to begin providing the Service immediately, and you accept that the right of withdrawal
+        is lost once the Service has been fully provided. If you withdraw within 14 days while the Service is still
+        being provided, you pay only for the part already delivered. You can cancel at any time from the billing portal.
       </p>
 
       <h2>Your content</h2>

@@ -286,7 +286,8 @@ export const CONNECTOR_CATEGORIES = ["Channels", "PMS", "Payments", "Content"] a
 export const MAX_PROPERTIES = 100;
 
 export const PRICING = {
-  trialDays: 14,
+  // No free trial. A property costs money from the first one — a host picks how
+  // many they need, pays, and then creates them.
   annualMonthsFree: 2,
   // Marginal price per property, by band (like tax brackets — fair, monotonic).
   bands: [

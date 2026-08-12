@@ -51,10 +51,10 @@ export function NewPropertyButton() {
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{blocked ? "Add a payment method first" : "Create a property"}</DialogTitle>
+          <DialogTitle>{blocked ? "Choose a plan first" : "Create a property"}</DialogTitle>
           <DialogDescription>
             {blocked
-              ? "Your plan doesn't cover another property yet."
+              ? "Your plan doesn't cover this property yet."
               : "Generate a guidebook with AI, or start from our template."}
           </DialogDescription>
         </DialogHeader>
@@ -68,8 +68,8 @@ export function NewPropertyButton() {
               <p className="text-sm text-amber-900">{blocked}</p>
             </div>
             <p className="text-sm text-ink-500">
-              Properties are billed individually and get cheaper the more you host — your
-              first is ${PRICING.bands[0].price}/month, and the rate drops from there.
+              Every property is paid for before it exists, and they get cheaper the more you
+              host — ${PRICING.bands[0].price}/month for the first, less for each one after.
             </p>
             <Button asChild className="w-full">
               <Link href="/dashboard/billing">Go to plan &amp; billing</Link>

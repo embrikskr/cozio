@@ -85,7 +85,7 @@ const faqs = [
   { q: "Does the AI concierge really answer guests?", a: "Yes — 24/7, using only what's in your guidebook. If it doesn't know, it tells guests to message you instead of guessing." },
   { q: "Can I actually earn money with it?", a: "Hosts sell early check-ins, airport transfers, welcome baskets and tours straight from the guide. You confirm requests with a tap." },
   { q: "What about international guests?", a: "Add languages per property and guests switch with one tap in the guide." },
-  { q: "What happens after the free trial?", a: `Pick a plan and pay per property — $9 for the first, less as you scale. No card needed to start, cancel anytime.` },
+  { q: "What does it cost?", a: "You pay per property from the first one — $9/month for one, less each for more. Every feature is included on every property, and you can cancel anytime." },
 ];
 
 /* ------------------------------------------------------------------ mark --- */
@@ -135,7 +135,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-6">
               <Link href="/login" className="hidden text-sm text-paper/75 hover:text-paper sm:block">Log in</Link>
               <Link href="/register" className="bg-paper px-5 py-2.5 text-sm font-semibold text-night transition-colors hover:bg-white">
-                Start free
+                Get started
               </Link>
             </div>
           </div>
@@ -164,13 +164,13 @@ export default function LandingPage() {
 
             <div className="mt-10 flex flex-wrap items-center gap-7">
               <Link href="/register" className="inline-flex items-center gap-2.5 bg-paper px-8 py-4 text-sm font-semibold text-night transition-colors hover:bg-white">
-                Create your guide — free <ArrowRight className="size-4" />
+                Create your guide <ArrowRight className="size-4" />
               </Link>
               <Link href="/g/brygga" className="text-sm font-medium text-paper underline decoration-paper/40 underline-offset-8 transition-colors hover:decoration-paper">
                 See a live guide
               </Link>
             </div>
-            <p className="mt-5 text-[13px] text-paper/50">14-day Pro trial · No credit card · Cancel anytime</p>
+            <p className="mt-5 text-[13px] text-paper/50">From $9/month · Every feature included · Cancel anytime</p>
 
             {/* Inline stats — no boxes */}
             <div className="mt-14 flex max-w-lg items-start gap-10 border-t border-paper/20 pt-7">
@@ -375,9 +375,9 @@ export default function LandingPage() {
         </Reveal>
         <Reveal delay={160} className="mt-6 flex flex-wrap items-center gap-4">
           <Link href="/register" className="inline-flex items-center gap-2 bg-night px-7 py-3.5 text-sm font-semibold text-paper transition-colors hover:bg-forest">
-            Start your free trial <ArrowRight className="size-4" />
+            Get started <ArrowRight className="size-4" />
           </Link>
-          <span className="text-sm text-muted">No credit card · Cancel anytime</span>
+          <span className="text-sm text-muted">Every feature included · Cancel anytime</span>
         </Reveal>
       </section>
 
@@ -388,7 +388,7 @@ export default function LandingPage() {
             <Kicker>FAQ</Kicker>
             <h2 className="mt-5 font-display text-4xl font-semibold tracking-tight">Questions, answered.</h2>
             <p className="mt-5 max-w-xs text-muted">
-              Still wondering? <Link href="/register" className="text-night underline decoration-night/30 underline-offset-4 hover:decoration-night">Start free</Link> and see it with your own property.
+              Still wondering? <Link href="/register" className="text-night underline decoration-night/30 underline-offset-4 hover:decoration-night">Create an account</Link> and see it with your own property.
             </p>
           </Reveal>
           <div className="border-t border-line">
@@ -422,7 +422,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-7">
               <Link href="/register" className="inline-flex items-center gap-2.5 bg-paper px-8 py-4 text-sm font-semibold text-night transition-colors hover:bg-white">
-                Start free today <ArrowRight className="size-4" />
+                Get started today <ArrowRight className="size-4" />
               </Link>
               <Link href="/g/brygga" className="text-sm font-medium text-paper underline decoration-paper/40 underline-offset-8 hover:decoration-paper">
                 See a live guide first
